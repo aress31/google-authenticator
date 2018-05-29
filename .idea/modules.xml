@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gAuth.iml" filepath="$PROJECT_DIR$/.idea/modules/gAuth.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gAuth_main.iml" filepath="$PROJECT_DIR$/.idea/modules/gAuth_main.iml" group="gAuth" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/gAuth_test.iml" filepath="$PROJECT_DIR$/.idea/modules/gAuth_test.iml" group="gAuth" />
+    </modules>
+  </component>
+</project>
