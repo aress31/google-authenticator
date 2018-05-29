@@ -2,7 +2,9 @@
 [![Language](https://img.shields.io/badge/Lang-Java-blue.svg)](https://www.java.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## A Burp Suite extension to set up macro using Google 2FA code.
+## A Burp Suite extension to apply the current Google 2FA code to relevant requests.
+
+This BurpSuite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.
 
 ## Installation
 ### Compilation 
