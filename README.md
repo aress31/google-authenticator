@@ -41,7 +41,7 @@ Following the aforementioned link, we obtain the shared secret (`42TCJUDP94W27YR
 During testing, we observe that the application is being protected by a `web application firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it impossible to take advantage of the Burp Suite automated scan capabilities.
 
 ### Solution
-1. Input relevant parameters into the Google Authenticator user interface, namely:
+1. Input relevant parameters into the Google Authenticator user interface:
     * Shared secret:        `42TCJUDP94W27YR3`
     * Regular expression:   `(?<![\w\d])\d{6,8}(?![\w\d])`
 
