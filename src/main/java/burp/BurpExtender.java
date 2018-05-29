@@ -21,7 +21,7 @@ import plugin.DataSet;
 
 public class BurpExtender implements IBurpExtender {
 
-  public static Boolean DEBUG = Boolean.TRUE;
+  public static Boolean DEBUG = Boolean.FALSE;
 
   // time is ms between pin code updates - normal time is 30s
   public static int DELAY = 5 * 1000;
