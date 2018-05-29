@@ -18,7 +18,7 @@ Further information are available at the following links:
 
 ## Example
 ### Problem
-We are comissioned to perform a web application penetration test on www.foobar.com. This web application implements a login form that uses Google 2FA for an additional layer of defense (prevents automated attacks such as brute forcing attacks). The client provided us with testing credentials along with a link to set up the Google Authenticator mobile application to allow for authenticated tesing.
+We are commissioned to perform a web application penetration test on www.foobar.com. This web application implements a login form that uses Google 2FA for an additional layer of defence (prevents automated attacks such as brute forcing attacks). The client provided us with testing credentials along with a link to set up the Google Authenticator mobile application to allow for authenticated testing.
 
 The following request is being used for login (in this example, the `pin` JSON parameter is the Google 2FA).
 ```
@@ -42,10 +42,10 @@ During testing, we observe that the application is being protected by a `web app
 
 ### Solution
 1. Input relevant parameters into the Google Authenticator user interface, namely:
-    * Shared secret : `42TCJUDP94W27YR3`
-    * Regular expression: `(?<![\w\d])\d{6,8}(?![\w\d])`
+    * Shared secret:        `42TCJUDP94W27YR3`
+    * Regular expression:   `(?<![\w\d])\d{6,8}(?![\w\d])`
 
-2. `Project options` -> `Sessions` -> add a `Session Handling rRle` -> `Invoke a Burp extension` -> `Google Authenticator: 2FA code applied to selected parameter`.
+2. `Project options` -> `Sessions` -> add a `Session Handling Rule` -> `Invoke a Burp extension` -> `Google Authenticator: 2FA code applied to selected parameter`.
 ![example](images/configuration-2.png)
 
 3. Configure the relevant scope for the registered session handling rule.
@@ -71,9 +71,9 @@ $ gradle fatJar
 In the Burp Suite, under the `Extender/Options` tab, click on the `Add` button and load the `GoogleAuthenticator-all` jarfile. 
 
 ## Possible Improvements
-- [ ] Add IHttpListener to add more ways of processing requests.
 - [ ] Add additional features.
 - [ ] Improve the UI.
+- [ ] Reimplement the `IHttpListener` in order to give users more ways of processing requests.
 - [ ] Source code optimisation.
 
 ## License
