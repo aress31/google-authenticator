@@ -4,6 +4,8 @@
     <bytecodeTargetLevel>
       <module name="gAuth_main" target="1.8" />
       <module name="gAuth_test" target="1.8" />
+      <module name="GoogleAuthenticator_main" target="1.8" />
+      <module name="GoogleAuthenticator_test" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

@@ -11,7 +11,7 @@
 2. Download the repository.
 ```shell
 $ git clone https://github.com/AresS31/GoogleAuthenticator
-$ cd .\swurg\
+$ cd .\GoogleAuthenticator\
 ```
 3. Create the jarfile:
 ```shell
@@ -19,7 +19,7 @@ $ gradle fatJar
 ```
 
 ### Burp Suite settings
-In the Burp Suite, under the `Extender/Options` tab, click on the `Add` button and load the `swurg-all` jarfile. 
+In the Burp Suite, under the `Extender/Options` tab, click on the `Add` button and load the `GoogleAuthenticator-all` jarfile. 
 
 ## Possible Improvements
 - [ ] Add new features.
@@ -27,7 +27,7 @@ In the Burp Suite, under the `Extender/Options` tab, click on the `Add` button a
 - [ ] Source code optimisation.
 
 ## License
-Copyright (C) 2016 - 2018 Alexandre Teyar
+Copyright (C) 2018 Alexandre Teyar
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
