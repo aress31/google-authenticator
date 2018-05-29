@@ -2,13 +2,44 @@
 [![Language](https://img.shields.io/badge/Lang-Java-blue.svg)](https://www.java.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## A Burp Suite extension to apply the current Google 2FA code to relevant requests.
+## A Burp Suite extension to apply the current Google two-factor authentication (2FA) code to relevant requests.
+This Burp Suite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.
 
-This BurpSuite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.
+Further information are available at the following links:
+<https://en.wikipedia.org/wiki/Google_Authenticator>
+<https://tools.ietf.org/html/rfc4226>
+<https://tools.ietf.org/html/rfc6238>
+
+## Example
+### Problem
+We are comissioned to perform a web application penetration test on www.foobar.com. This web application implements a login form that uses Google 2FA for an additional layer of defense (prevents automated attacks such as brute forcing attacks). The client provided us with testing credentials along with a link to set up the Google Authenticator mobile application to allow for authenticated tesing.
+
+Following the aforementioned link, we obtain the shared secret (`42TCJUDP94W27YR3`) that the `Time-based One-time Password Algorithm (TOTP)` uses to generate the Google 2FA codes.
+
+During testing, we observe that the application is being protected by a `web application firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it impossible to take advantage of the Burp Suite automated scan capabilities.
+
+//TO BE COMPLETED
+### Solution
+1/ Configure GoogleAuthenticator as follows:
+![example](images/configuration-1.png)
+
+* Zone 1: Secret shared key, used to generate the Google 2FA code using the TOTP algorithm specified in RFC4226 and RFC6238.
+* Zone 2: Regular expression for the session handling rule to match and replace with the current Google 2FA code.
+* Zone 3: Google 2FA generated code in real-time.
+
+2/ Set up a session handling rule that checks for session validity, if invalid run a macro to issue a login request:
+![example](images/configuration-2.png)
+![example](images/configuration-3.png)
+
+3/ Add a rule action -> `Invoke a Burp extension` -> `Google Authenticator: 2FA code applied to selected parameter`
+![example](images/configuration-4.png)
+
+### Tips
+* Use the regex `(?<![\w\d])\d{6,8}(?![\w\d])` for optimal results as Google 2FA codes are made up 6 to 8 digits according to the RFC.
+* Restrict the scope of the session handling rule down to the request(s) containing the Google 2FA code only.
 
 ## Installation
-### Compilation 
-#### Windows & Linux
+### Compilation
 1. Install gradle (<https://gradle.org/>)
 2. Download the repository.
 ```shell
