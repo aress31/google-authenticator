@@ -5,10 +5,10 @@
 ## A Burp Suite extension to apply the current Google two-factor authentication (2FA) code to relevant requests.
 This Burp Suite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.
 
-Further information are available at the following links:
-<https://en.wikipedia.org/wiki/Google_Authenticator>
-<https://tools.ietf.org/html/rfc4226>
-<https://tools.ietf.org/html/rfc6238>
+Further information on two-factor authentication are available at the following links:
+* <https://en.wikipedia.org/wiki/Google_Authenticator>
+* <https://tools.ietf.org/html/rfc4226>
+* <https://tools.ietf.org/html/rfc6238>
 
 ## User interface
 ![example](images/configuration-1.png)
@@ -45,7 +45,7 @@ During testing, we observe that the application is being protected by a `web app
     * Shared secret:        `42TCJUDP94W27YR3`
     * Regular expression:   `(?<![\w\d])\d{6,8}(?![\w\d])`
 
-2. `Project options` -> `Sessions` -> add a `Session Handling Rule` -> `Invoke a Burp extension` -> `Google Authenticator: 2FA code applied to selected parameter`.
+2. `Project options` -> `Sessions` -> `Add` a `Session Handling Rule` -> `Invoke a Burp extension` -> `Google Authenticator: 2FA code applied to selected parameter`.
 ![example](images/configuration-2.png)
 
 3. Configure the relevant scope for the registered session handling rule.
