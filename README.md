@@ -5,7 +5,7 @@
 ## A Burp Suite extension to apply the current Google two-factor authentication (2FA) code to relevant requests.
 This Burp Suite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.
 
-Further information on two-factor authentication are available at the following links:
+Further information on two-factor authentication is available at the following links:
 * <https://en.wikipedia.org/wiki/Google_Authenticator>
 * <https://tools.ietf.org/html/rfc4226>
 * <https://tools.ietf.org/html/rfc6238>
@@ -18,9 +18,9 @@ Further information on two-factor authentication are available at the following 
 
 ## Example
 ### Problem
-We are commissioned to perform a web application penetration test on www.foobar.com. This web application implements a login form that uses Google 2FA for an additional layer of defence (prevents automated attacks such as brute forcing attacks). The client provided us with testing credentials along with a link to set up the Google Authenticator mobile application to allow for authenticated testing.
+We have been commissioned to perform a web application penetration test on www.foobar.com. This web application implements a login form incorporating Google 2FA for an additional layer of defence (prevents automated attacks such as brute forcing attacks). The client provided us with testing credentials along with a link to set up the Google Authenticator mobile application to allow for authenticated testing.
 
-The following request is being used for login (in this example, the `pin` JSON parameter is the Google 2FA).
+A login is performed using the following request (in this example, the `pin` JSON parameter is the Google 2FA).
 ```
 POST /api/login HTTP/1.1
 Host: foobar.com
@@ -38,7 +38,7 @@ Connection: close
 
 Following the aforementioned link, we obtain the shared secret (`42TCJUDP94W27YR3`) that the `Time-based One-time Password Algorithm (TOTP)` uses to generate the Google 2FA codes.
 
-During testing, we observe that the application is being protected by a `web application firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it impossible to take advantage of the Burp Suite automated scan capabilities.
+During testing, we observed that the application is being protected by a `web application firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it virtually impossible to take advantage of the Burp Suite automated scan capabilities.
 
 ### Solution
 1. Input relevant parameters into the Google Authenticator user interface:
