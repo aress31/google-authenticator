@@ -51,7 +51,7 @@ During testing, we observed that the application is being protected by a `web ap
 3. Configure the relevant scope for the registered session handling rule.
 
 ## Tips
-* Use the regex `(?<![\w\d])\d{6,8}(?![\w\d])` for optimal results as Google 2FA codes are made up 6 to 8 digits according to the RFC.
+* Use the regex `(?<![\w\d])\d{6,8}(?![\w\d])` for optimal results as Google 2FA codes are made up of 6 to 8 digits according to the relevant RFCs.
 * Restrict the scope of the session handling rule down to the request(s) containing the Google 2FA code only.
 
 ## Installation
