@@ -67,7 +67,7 @@ $ cd .\GoogleAuthenticator\
 $ gradle fatJar
 ```
 
-### Burp Suite settings
+### Load into Burp Suite
 In the Burp Suite, under the `Extender/Options` tab, click on the `Add` button and load the `GoogleAuthenticator-all` jarfile. 
 
 ## Possible Improvements
