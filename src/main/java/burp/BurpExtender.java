@@ -38,14 +38,13 @@ public class BurpExtender implements IBurpExtender {
 
     callbacks.setExtensionName(EXTENSION);
     callbacks.addSuiteTab(tab);
-    callbacks.printOutput(String.format("%s tab created", EXTENSION));
+    callbacks.printOutput(String.format("%s initialised", EXTENSION));
 
     callbacks.registerSessionHandlingAction(sessionHandlingAction);
 
     if (DEBUG) {
       callbacks.printOutput(String.format("%s", sessionHandlingAction));
       callbacks.printOutput(String.format("%s", tab));
-      callbacks.printOutput(String.format("%s", dataSet));
     }
   }
 }

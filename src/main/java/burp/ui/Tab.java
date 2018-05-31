@@ -33,6 +33,7 @@ import java.awt.Insets;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -64,11 +65,10 @@ public class Tab implements ITab {
     this.callbacks = callbacks;
     this.dataSet = dataSet;
 
-    initialiseUI();
-    initialiseTimer();
+    initUI();
   }
 
-  private void initialiseUI() {
+  private void initUI() {
     this.rootPanel = new JPanel();
 
     this.rootPanel.setLayout(new BoxLayout(this.rootPanel, BoxLayout.PAGE_AXIS));
@@ -103,13 +103,13 @@ public class Tab implements ITab {
     drawTwoFAPanel();
   }
 
-  private void initialiseTimer() {
+  private void startTimer() {
     Timer timer = new Timer(DELAY, e -> {
       this.dataSet.setPin(this.dataSet.getKey());
       this.pinLabel.setText(this.dataSet.getPin());
 
       if (DEBUG) {
-        callbacks.printOutput(String.format("%s",
+        this.callbacks.printOutput(String.format("%s",
             ((SessionHandlingAction) this.callbacks.getSessionHandlingActions().get(0)).getDataSet()
                 .toString()));
       }
@@ -129,10 +129,15 @@ public class Tab implements ITab {
     JTextField keyTextField = new JTextField(48);
     keyTextField.setHorizontalAlignment(JTextField.CENTER);
     keyLabel.setLabelFor(keyTextField);
-    keyTextField.getDocument().addDocumentListener((SimpleDocumentListener) e -> {
+
+    JButton runButton = new JButton("Run/Update");
+    runButton.addActionListener(e -> {
       this.dataSet.setKey(keyTextField.getText());
-      this.dataSet.setPin(keyTextField.getText());
-      this.pinLabel.setText(this.dataSet.getPin());
+      startTimer();
+
+      if(this.dataSet.getKey() == null) {
+        this.pinLabel.setText(null);
+      }
 
       if (DEBUG) {
         this.callbacks.printOutput(String.format("%s",
@@ -145,6 +150,8 @@ public class Tab implements ITab {
 
     gridBagConstraints.insets = new Insets(0, 10, 0, 0);
     this.keyPanel.add(keyTextField, gridBagConstraints);
+
+    this.keyPanel.add(runButton, gridBagConstraints);
 
     this.keyPanel.revalidate();
     this.keyPanel.repaint();

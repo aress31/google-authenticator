@@ -35,7 +35,11 @@ public class DataSet {
   }
 
   public void setKey(String key) {
-    this.key = key;
+    if(key != null && !key.equals("")) {
+      this.key = key;
+    } else {
+      this.key = null;
+    }
   }
 
   public String getPin() {
@@ -43,8 +47,10 @@ public class DataSet {
   }
 
   public void setPin(String key) {
-    if (key != null) {
+    if (key != null && !key.equals("")) {
       this.pin = Integer.toString(new GoogleAuthenticator().getTotpPassword(key));
+    } else {
+      this.pin = null;
     }
   }
 
