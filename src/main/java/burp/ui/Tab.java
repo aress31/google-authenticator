@@ -61,11 +61,14 @@ public class Tab implements ITab {
   private Font pinFont = new Font(null, Font.BOLD, 48);
   private Font noteFont = new Font(null, Font.ITALIC, 11);
 
+  private Timer timer;
+
   public Tab(IBurpExtenderCallbacks callbacks, DataSet dataSet) {
     this.callbacks = callbacks;
     this.dataSet = dataSet;
 
     initUI();
+    initTimer();
   }
 
   private void initUI() {
@@ -103,8 +106,8 @@ public class Tab implements ITab {
     drawTwoFAPanel();
   }
 
-  private void startTimer() {
-    Timer timer = new Timer(DELAY, e -> {
+  private void initTimer() {
+    this.timer = new Timer(DELAY, e -> {
       this.dataSet.setPin(this.dataSet.getKey());
       this.pinLabel.setText(this.dataSet.getPin());
 
@@ -114,9 +117,9 @@ public class Tab implements ITab {
                 .toString()));
       }
     });
-    timer.setInitialDelay(0);
-    timer.setRepeats(Boolean.TRUE);
-    timer.start();
+
+    this.timer.setInitialDelay(0);
+    this.timer.setRepeats(Boolean.TRUE);
   }
 
   private void drawKeyPanel() {
@@ -133,10 +136,12 @@ public class Tab implements ITab {
     JButton runButton = new JButton("Run/Update");
     runButton.addActionListener(e -> {
       this.dataSet.setKey(keyTextField.getText());
-      startTimer();
 
       if(this.dataSet.getKey() == null) {
         this.pinLabel.setText(null);
+        this.timer.stop();
+      } else {
+        this.timer.start();
       }
 
       if (DEBUG) {
