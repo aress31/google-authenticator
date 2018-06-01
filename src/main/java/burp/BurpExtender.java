@@ -23,8 +23,9 @@ public class BurpExtender implements IBurpExtender {
 
   public static Boolean DEBUG = Boolean.FALSE;
 
-  // time is ms between pin code updates - normal time is 30s
-  public static int DELAY = 5 * 1000;
+  // DELAY is the time in ms between the pin updates - usually around 30s
+  // DELAY is arbitrary set to 500ms in order to minimise synchronisation errors
+  public static int DELAY = 500;
 
   public static String COPYRIGHT = "Copyright \u00a9 2018 Alexandre Teyar All Rights Reserved";
   public static String EXTENSION = "Google Authenticator";
