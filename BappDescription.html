@@ -1,0 +1,12 @@
+<p>This Burp Suite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.</p>
+
+<p>Instructions:</p>
+
+<ol>
+<li>Enter the <i>shared secret</i> into the Google Authenticator tab.</li>
+<li>Enter a string to regular expression to replace in requests. The regular expression <i>(?&lt;![\w\d])\d{6,8}(?![\w\d])</i> matches an existing OTP.</li>
+<li>Configure a session handling rule that applies to relevant requests and invokes the extension.</li>
+<ol>
+
+<p>For more detailed instructions, consult the Github repository.</p>
+
