@@ -107,7 +107,8 @@ public class Tab extends JPanel implements ITab {
     runButton.setFont(new Font(runButton.getFont().getName(), Font.BOLD, runButton.getFont().getSize()));
     runButton.setForeground(javax.swing.UIManager.getLookAndFeelDefaults().getColor("Burp.primaryButtonForeground"));
     runButton.addActionListener(e -> {
-      callbacks.printOutput("Clicked 'run/update' button");
+      // TODO: Check if 'key' is valid, if not, print 'statusLabel' in Color.RED and
+      // do nothing/stop timer.
       this.dataSet.setKey(keyTextField.getText());
 
       if (this.dataSet.getKey() == null) {
@@ -145,7 +146,7 @@ public class Tab extends JPanel implements ITab {
         + "see https://portswigger.net/support/configuring-burp-suites-session-handling-rules for detailed information on how to configure Burp's session handling rules.</li>"
         + "<li>Monitor issued request(s) using either the <b>'Open session tracer'</b> feature available under <b>'Project Options -> Sessions -> Session Handing Rules'</b> or the"
         + "<br/>" + "<b>'Logger'</b> to make sure that Google 2FA codes are getting updated.</li>" + "</ol>"
-        + "<em>Note: Issued request(s) will be searched for the configured (regular) expression which will then get automatically replaced with refreshed/valid Google 2FA code.</em>"
+        + "<em>Note: Issued request(s) will be searched for the configured (regular) expression which will then get automatically replaced with refreshed/valid Google 2FA codes.</em>"
         + "</html>");
 
     JTextField regexTextField = new JTextField(32);
