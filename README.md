@@ -86,7 +86,7 @@ During testing, we observed that the application is being protected by a `web ap
 
 #### Windows & Unix
 
-1. Install and configure [Gradle](https://gradle.org>) on your system.
+1. Install and configure [Gradle](https://gradle.org) on your system.
 2. Download/clone this repository.
 
 ```shell
