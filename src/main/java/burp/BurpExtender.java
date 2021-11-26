@@ -38,6 +38,7 @@ public class BurpExtender implements IBurpExtender {
     callbacks.setExtensionName(EXTENSION);
 
     callbacks.addSuiteTab(tab);
+    callbacks.customizeUiComponent(tab);
     callbacks.printOutput(String.format("'%s' initialised", EXTENSION));
 
     callbacks.registerSessionHandlingAction(new SessionHandlingAction(callbacks, dataSet));
