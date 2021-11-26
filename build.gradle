@@ -1,23 +1,32 @@
-group 'jetbrains'
-version '1.0'
-
 apply plugin: 'java'
-
-sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile 'com.warrenstrange:googleauth:1.1.2'
-    compile group: 'log4j', name: 'log4j', version: '1.2.17'
-    compile group: 'net.portswigger.burp.extender', name: 'burp-extender-api', version: '1.7.22'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    // https://mvnrepository.com/artifact/com.warrenstrange/googleauth
+    implementation group: 'com.warrenstrange', name: 'googleauth', version: '1.5.0'
+    // https://mvnrepository.com/artifact/net.portswigger.burp.extender/burp-extender-api
+    implementation group: 'net.portswigger.burp.extender', name: 'burp-extender-api', version: '2.3'
+
+    // https://mvnrepository.com/artifact/junit/junit
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha5'
+}
+
+test {
+    testLogging.showStandardStreams = true   
 }
 
 task fatJar(type: Jar) {
     baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    duplicatesStrategy = 'exclude'
+    from { 
+        configurations.runtimeClasspath.collect { 
+            it.isDirectory() ? it : zipTree(it) 
+        }
+    }
     with jar
 }

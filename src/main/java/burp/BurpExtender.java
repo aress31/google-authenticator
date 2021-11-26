@@ -1,5 +1,5 @@
 /*
-#    Copyright (C) 2018 Alexandre Teyar
+#    Copyright (C) 2018 - 2021 Alexandre Teyar
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,36 +16,30 @@
 
 package burp;
 
-import burp.ui.Tab;
-import plugin.DataSet;
+import googleauthenticator.gui.Tab;
+import googleauthenticator.utils.DataSet;
 
 public class BurpExtender implements IBurpExtender {
 
-  public static Boolean DEBUG = Boolean.FALSE;
+  public static final boolean DEBUG = Boolean.FALSE;
 
-  // DELAY is the time in ms between the pin updates - usually around 30s
-  // DELAY is arbitrary set to 500ms in order to minimise synchronisation errors
-  public static int DELAY = 500;
+  // Time in ms between the pin updates - usually around 30s
+  // Arbitrary set to 500ms in order to minimise synchronisation errors
+  public static final int DELAY = 500;
 
-  public static String COPYRIGHT = "Copyright \u00a9 2018 Alexandre Teyar All Rights Reserved";
-  public static String EXTENSION = "Google Authenticator";
+  public static final String COPYRIGHT = "Copyright \u00a9 2016 - 2021 Alexandre Teyar, Aegis Cyber (www.aegiscyber.co.uk). All Rights Reserved.";
+  public static final String EXTENSION = "Google Authenticator";
 
   @Override
   public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
-    DataSet dataSet = new DataSet();
-    SessionHandlingAction sessionHandlingAction = new SessionHandlingAction(callbacks,
-        dataSet);
+    DataSet dataSet = new DataSet(callbacks);
     Tab tab = new Tab(callbacks, dataSet);
 
     callbacks.setExtensionName(EXTENSION);
+
     callbacks.addSuiteTab(tab);
-    callbacks.printOutput(String.format("%s initialised", EXTENSION));
+    callbacks.printOutput(String.format("'%s' initialised", EXTENSION));
 
-    callbacks.registerSessionHandlingAction(sessionHandlingAction);
-
-    if (DEBUG) {
-      callbacks.printOutput(String.format("%s", sessionHandlingAction));
-      callbacks.printOutput(String.format("%s", tab));
-    }
+    callbacks.registerSessionHandlingAction(new SessionHandlingAction(callbacks, dataSet));
   }
 }
