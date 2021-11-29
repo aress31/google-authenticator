@@ -1,5 +1,5 @@
 /*
-#    Copyright (C) 2018 Alexandre Teyar
+#    Copyright (C) 2018 - 2021 Alexandre Teyar
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,8 @@ import static burp.BurpExtender.EXTENSION;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import plugin.DataSet;
+
+import googleauthenticator.utils.DataSet;
 
 public class SessionHandlingAction implements ISessionHandlingAction {
 
@@ -43,8 +44,7 @@ public class SessionHandlingAction implements ISessionHandlingAction {
   }
 
   @Override
-  public void performAction(IHttpRequestResponse currentRequest,
-      IHttpRequestResponse[] macroItems) {
+  public void performAction(IHttpRequestResponse currentRequest, IHttpRequestResponse[] macroItems) {
     if (this.dataSet.getPin() != null && this.dataSet.getRegex() != null) {
       String request = this.callbacks.getHelpers().bytesToString(currentRequest.getRequest());
 
@@ -56,6 +56,7 @@ public class SessionHandlingAction implements ISessionHandlingAction {
       if (this.dataSet.getHasRegex()) {
         Pattern pattern = Pattern.compile(this.dataSet.getRegex());
         Matcher matcher = pattern.matcher(request);
+
         if (matcher.find()) {
           request = matcher.replaceAll(this.dataSet.getPin());
         }
