@@ -23,7 +23,7 @@ Further information about Burp session handling rules is available at the follow
 
 ![example](images/configuration-1.png)
 
-- Top panel: Secret shared key, used to generate the Google 2FA code using the `Time-based One-time Password Algorithm (TOTP)` specified in `RFC4226` and `RFC6238`.
+- Top panel: Secret shared key, used to generate the Google 2FA code using the `Time-based One-Time Password (TOTP)` algorithm specified in `RFC4226` and `RFC6238`.
 - Left panel: Regular expression for the session handling rule to match and replace with the current Google 2FA code.
 - Right panel: Google 2FA generated code in real-time.
 
