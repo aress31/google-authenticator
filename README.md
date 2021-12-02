@@ -5,7 +5,7 @@
 
 ## A Burp Suite extension to apply the current Google Two-Tactor Authentication (2FA) code to relevant/selected requests.
 
-This Burp Suite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.
+This Burp Suite extension turns Burp into a Google Authenticator client. The current Google `Two-Factor Authentication (2FA)` code is automatically computed from a given shared secret and applied to bespoke location(s) in relevant requests in real-time.
 
 Further information on two-factor authentication is available at the following links:
 
@@ -23,7 +23,7 @@ Further information about Burp session handling rules is available at the follow
 
 ![example](images/configuration-1.png)
 
-- Top panel: Secret shared key, used to generate the Google 2FA code using the TOTP algorithm specified in RFC4226 and RFC6238.
+- Top panel: Secret shared key, used to generate the Google 2FA code using the `Time-based One-time Password Algorithm (TOTP)` specified in `RFC4226` and `RFC6238`.
 - Left panel: Regular expression for the session handling rule to match and replace with the current Google 2FA code.
 - Right panel: Google 2FA generated code in real-time.
 
@@ -54,7 +54,7 @@ Connection: close
 
 Following the aforementioned link, we obtain the shared secret (`42TCJUDP94W27YR3`) that the `Time-based One-time Password Algorithm (TOTP)` uses to generate the Google 2FA codes.
 
-During testing, we observed that the application is being protected by a `web application firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it virtually impossible to take advantage of the Burp Suite automated scan capabilities.
+During testing, we observed that the application is being protected by a `Web Application Firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it virtually impossible to take advantage of the Burp Suite automated scan capabilities.
 
 ### Solution
 
