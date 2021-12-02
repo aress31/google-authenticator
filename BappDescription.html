@@ -9,11 +9,11 @@
 <ol>
   <li>
     Input the <em>shared secret</em> used by the Time-based One-time Password
-    Algorithm (TOTP) into the Google Authenticator tab.
+    Algorithm (TOTP) into Google Authenticator.
   </li>
   <li>
-    Input the (regular) expression to replace in request(s) into the Google
-    Authenticator tab. Use the regex
+    Input the (regular) expression to match and replace in issued request(s)
+    into Google Authenticator. Use the regex
     <em>(?&lt;![\w\d])\d{6,8}(?![\w\d])</em> for optimal results as Google 2FA
     codes are made up of 6 to 8 digits according to the relevant RFCs.
   </li>
