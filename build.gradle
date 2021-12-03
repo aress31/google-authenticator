@@ -4,6 +4,9 @@ repositories {
     mavenCentral()
 }
 
+targetCompatibility = 1.8
+sourceCompatibility = 1.8
+
 dependencies {
     // https://mvnrepository.com/artifact/com.warrenstrange/googleauth
     implementation group: 'com.warrenstrange', name: 'googleauth', version: '1.5.0'
