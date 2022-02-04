@@ -2,8 +2,8 @@ Uuid: fb3685f958f8424493945c6c60c0920c
 ExtensionType: 1
 Name: Google Authenticator
 RepoName: google-authenticator
-ScreenVersion: 1.1
-SerialVersion: 8
+ScreenVersion: 1.1a
+SerialVersion: 11
 MinPlatformVersion: 0
 ProOnly: False
 Author: Alexandre Teyar, Aegis Cyber (www.aegiscyber.co.uk)
