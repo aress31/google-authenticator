@@ -3,9 +3,9 @@
 [![Language](https://img.shields.io/badge/Lang-Java-blue.svg)](https://www.java.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## A Burp Suite extension to apply the current Google Two-Tactor Authentication (`2FA`) code to relevant/selected requests.
+## A `Burp Suite` extension to apply the current Google Two-Tactor Authentication (`2FA`) code to relevant/selected requests.
 
-This Burp Suite extension turns Burp into a `Google Authenticator` client. The current Google `Two-Factor Authentication (2FA)` code is automatically computed from a given shared secret and applied to bespoke location(s) in relevant requests in real-time.
+This `Burp Suite` extension turns `Burp` into a `Google Authenticator` client. The current Google `Two-Factor Authentication (2FA)` code is automatically computed from a given shared secret and applied to bespoke location(s) in relevant requests in real-time.
 
 Further information on two-factor authentication is available at the following links:
 
@@ -13,7 +13,7 @@ Further information on two-factor authentication is available at the following l
 - <https://tools.ietf.org/html/rfc4226>
 - <https://tools.ietf.org/html/rfc6238>
 
-Further information about Burp session handling rules is available at the following link:
+Further information about `Burp` session handling rules is available at the following link:
 
 - <https://portswigger.net/support/configuring-burp-suites-session-handling-rules>
 
@@ -50,7 +50,7 @@ Connection: close
 
 Following the aforementioned link, we obtain the shared secret (`42TCJUDP94W27YR3`) that the `Time-based One-time Password Algorithm (TOTP)` uses to generate the `Google 2FA` codes.
 
-During testing, we observed that the application is being protected by a `Web Application Firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it virtually impossible to take advantage of the Burp Suite automated scan capabilities.
+During testing, we observed that the application is being protected by a `Web Application Firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it virtually impossible to take advantage of the `Burp Suite` automated scan capabilities.
 
 ### Solution
 
