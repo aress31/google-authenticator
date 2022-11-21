@@ -47,7 +47,8 @@ public final class DataSet {
 
   public void setPin(String key) {
     if (key != null && !key.equals("")) {
-      this.pin = Integer.toString(new GoogleAuthenticator().getTotpPassword(key));
+      int _pin = new GoogleAuthenticator().getTotpPassword(key);
+      this.pin = String.format("%06d", _pin);
     } else {
       this.pin = null;
     }

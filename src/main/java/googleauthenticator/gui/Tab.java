@@ -67,7 +67,7 @@ public class Tab extends JPanel implements ITab {
   private void initTimer() {
     this.timer = new Timer(DELAY, e -> {
       this.dataSet.setPin(this.dataSet.getKey());
-      this.pinLabel.setText(this.dataSet.getPin());
+      this.pinLabel.setText(this.dataSet.getPin().replaceAll("(.{3})", "$0 "));
 
       if (DEBUG) {
         this.callbacks.printOutput(String.format("%s",
