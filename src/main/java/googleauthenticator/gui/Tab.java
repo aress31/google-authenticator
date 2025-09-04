@@ -28,6 +28,8 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.datatransfer.StringSelection;
+import java.awt.Toolkit;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -55,6 +57,7 @@ public class Tab extends JPanel implements ITab {
 
   private JLabel pinLabel = new JLabel();
   private JTextField keyTextField = new JTextField(null, 64);
+  private JButton copyButton = new JButton("\uD83D\uDCCB");
 
   public Tab(IBurpExtenderCallbacks callbacks, DataSet dataSet) {
     this.dataSet = dataSet;
@@ -67,7 +70,11 @@ public class Tab extends JPanel implements ITab {
   private void initTimer() {
     this.timer = new Timer(DELAY, e -> {
       this.dataSet.setPin(this.dataSet.getKey());
-      this.pinLabel.setText(this.dataSet.getPin());
+      this.pinLabel.setText(this.dataSet.getPin().replaceAll("(.{3})", "$0 "));
+
+      if (!this.pinLabel.getText().isEmpty()) {
+        copyButton.setVisible(true);
+      }
 
       if (DEBUG) {
         this.callbacks.printOutput(String.format("%s",
@@ -113,6 +120,7 @@ public class Tab extends JPanel implements ITab {
 
       if (this.dataSet.getKey() == null) {
         this.pinLabel.setText(null);
+        this.copyButton.setVisible(false);
         this.timer.stop();
       } else {
         this.timer.restart();
@@ -123,6 +131,9 @@ public class Tab extends JPanel implements ITab {
             ((SessionHandlingAction) this.callbacks.getSessionHandlingActions().get(0)).getDataSet().toString()));
       }
     });
+
+    // Pressing the Enter/Return key will click the button
+    this.keyTextField.addActionListener(e -> runButton.doClick());
 
     JPanel keyPanel = new JPanel();
     keyPanel.setBorder(BorderFactory.createTitledBorder(""));
@@ -220,10 +231,22 @@ public class Tab extends JPanel implements ITab {
     twoFAPanel.setBorder(BorderFactory.createTitledBorder("Google 2FA Code"));
 
     // Default size is: 11
-    this.pinLabel
-        .setFont(new Font(this.pinLabel.getFont().getName(), Font.BOLD, this.pinLabel.getFont().getSize() + 37));
+    Font bigFont = new Font(this.pinLabel.getFont().getName(), Font.BOLD, this.pinLabel.getFont().getSize() + 37);
+    this.pinLabel.setFont(bigFont);
 
     twoFAPanel.add(this.pinLabel);
+
+    this.copyButton.addActionListener(e -> {
+      String pin = this.dataSet.getPin();
+
+      if (pin != null) {
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(pin), null);
+      }
+    });
+
+    this.copyButton.setFont(bigFont);
+    this.copyButton.setVisible(false);
+    twoFAPanel.add(copyButton);
 
     return twoFAPanel;
   }
