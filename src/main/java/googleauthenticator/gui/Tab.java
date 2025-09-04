@@ -148,6 +148,7 @@ public class Tab extends JPanel implements ITab {
         + "<br/>" + "<b>'Logger'</b> to make sure that Google 2FA codes are getting updated.</li>" + "</ol>"
         + "<em>Note: Issued request(s) will be searched for the configured (regular) expression which will then get automatically replaced with refreshed/valid Google 2FA codes.</em>"
         + "</html>");
+    instructionsLabel.putClientProperty("html.disable", null);
 
     JTextField regexTextField = new JTextField(32);
     regexTextField.getDocument().addDocumentListener(new DocumentListener() {

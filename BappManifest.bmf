@@ -2,11 +2,12 @@ Uuid: fb3685f958f8424493945c6c60c0920c
 ExtensionType: 1
 Name: Google Authenticator
 RepoName: google-authenticator
-ScreenVersion: 1.0
-SerialVersion: 1
+ScreenVersion: 1.1a
+SerialVersion: 11
 MinPlatformVersion: 0
 ProOnly: False
 Author: Alexandre Teyar, Aegis Cyber (www.aegiscyber.co.uk)
 ShortDescription: Generate Google Authenticator OTPs in session handling rules.
-EntryPoint: build/libs/GoogleAuthenticator-all-1.0.jar
+EntryPoint: build/libs/google-authenticator-all.jar
 BuildCommand: gradle fatJar
+SupportedProducts: Pro, Community

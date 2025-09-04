@@ -1,32 +1,11 @@
-<p>
-  This Burp Suite extension turns Burp into a Google Authenticator client. The
-  current Google Two-Factor Authentication (2FA) code is automatically computed
-  from a given shared secret and applied to bespoke location(s) in relevant
-  requests in real-time.
-</p>
+<p>This Burp Suite extension turns Burp into a Google Authenticator client. The current Google Two-Factor Authentication (2FA) code is automatically computed from a given shared secret and applied to bespoke location(s) in relevant requests in real-time.</p>
 
 <p>Instructions:</p>
+
 <ol>
-  <li>
-    Input the <em>shared secret</em> used by the Time-based One-Time Password
-    (TOTP) algorithm into Google Authenticator.
-  </li>
-  <li>
-    Input the (regular) expression to match and replace in issued request(s)
-    into Google Authenticator. Use the regex
-    <em>(?&lt;![\w\d])\d{6,8}(?![\w\d])</em> for optimal results as Google 2FA
-    codes are made up of 6 to 8 digits according to the relevant RFCs.
-  </li>
-  <li>
-    Configure a session handling rule that applies to relevant request(s) and
-    invokes this extension.
-  </li>
+<li>Input the <em>shared secret</em> used by the Time-based One-Time Password (TOTP) algorithm into Google Authenticator.</li>
+<li>Input the (regular) expression to match and replace in issued request(s) into Google Authenticator. Use the regex <em>(?&lt;![\w\d])\d{6,8}(?![\w\d])</em> for optimal results as Google 2FA codes are made up of 6 to 8 digits according to the relevant RFCs.</li>
+<li>Configure a session handling rule that applies to relevant request(s) and invokes this extension.</li>
 </ol>
 
-<p>
-  For more detailed instructions on how to use/leverage Google Auhtenticator,
-  consult the README available on the
-  <a href="https://github.com/aress31/googleauthenticator"
-    >GitHub project page</a
-  >.
-</p>
+<p>For more detailed instructions on how to use/leverage Google Auhtenticator, consult the README available on the <a href="https://github.com/aress31/googleauthenticator">GitHub project page</a>.</p>
