@@ -12,6 +12,8 @@ public final class DataSet {
   private String key;
   private String pin;
   private String regex;
+  private String prefix;
+  private String suffix;
 
   public DataSet(IBurpExtenderCallbacks callbacks) {
     this.callbacks = callbacks;
@@ -23,6 +25,17 @@ public final class DataSet {
 
   public String getKey() {
     return key;
+  }
+
+  public String getPinWithPrefixAndSuffix() {
+    if(this.pin == null)
+      return null;
+
+    String pin = this.prefix == null ? "" : this.prefix;
+    pin += this.pin;
+    pin += this.suffix == null ? "" : this.suffix;
+
+    return pin;
   }
 
   public String getPin() {
@@ -58,8 +71,24 @@ public final class DataSet {
     this.regex = regex;
   }
 
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
+  }
+
+  public void setSuffix(String suffix) {
+    this.suffix = suffix;
+  }
+
+  @Override
   public String toString() {
-    return "DataSet{" + "hasRegex=" + hasRegex + ", key='" + key + '\'' + ", pin='" + pin + '\'' + ", regex='" + regex
-        + '\'' + '}';
+    return "DataSet{" +
+        "callbacks=" + callbacks +
+        ", hasRegex=" + hasRegex +
+        ", key='" + key + '\'' +
+        ", pin='" + pin + '\'' +
+        ", regex='" + regex + '\'' +
+        ", prefix='" + prefix + '\'' +
+        ", suffix='" + suffix + '\'' +
+        '}';
   }
 }

@@ -4,8 +4,11 @@ repositories {
     mavenCentral()
 }
 
-targetCompatibility = 1.8
-sourceCompatibility = 1.8
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
 
 dependencies {
     // https://mvnrepository.com/artifact/com.warrenstrange/googleauth
@@ -23,13 +26,15 @@ test {
     testLogging.showStandardStreams = true   
 }
 
-task fatJar(type: Jar) {
-    baseName = project.name + '-all'
-    duplicatesStrategy = 'exclude'
-    from { 
-        configurations.runtimeClasspath.collect { 
-            it.isDirectory() ? it : zipTree(it) 
+tasks.register('fatJar', Jar) {
+    archiveBaseName.set("${project.name}-all")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect { file ->
+            file.isDirectory() ? file : zipTree(file)
         }
     }
-    with jar
+
+    with(tasks.named('jar', Jar).get())
 }

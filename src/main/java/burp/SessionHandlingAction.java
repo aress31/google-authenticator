@@ -45,7 +45,7 @@ public class SessionHandlingAction implements ISessionHandlingAction {
 
   @Override
   public void performAction(IHttpRequestResponse currentRequest, IHttpRequestResponse[] macroItems) {
-    if (this.dataSet.getPin() != null && this.dataSet.getRegex() != null) {
+    if (this.dataSet.getPinWithPrefixAndSuffix() != null && this.dataSet.getRegex() != null) {
       String request = this.callbacks.getHelpers().bytesToString(currentRequest.getRequest());
 
       if (DEBUG) {
@@ -58,10 +58,10 @@ public class SessionHandlingAction implements ISessionHandlingAction {
         Matcher matcher = pattern.matcher(request);
 
         if (matcher.find()) {
-          request = matcher.replaceAll(this.dataSet.getPin());
+          request = matcher.replaceAll(this.dataSet.getPinWithPrefixAndSuffix());
         }
       } else {
-        request = request.replaceAll(this.dataSet.getRegex(), this.dataSet.getPin());
+        request = request.replaceAll(this.dataSet.getRegex(), this.dataSet.getPinWithPrefixAndSuffix());
       }
 
       if (DEBUG) {

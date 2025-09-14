@@ -30,6 +30,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.datatransfer.StringSelection;
 import java.awt.Toolkit;
+import java.util.function.Consumer;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -151,7 +152,7 @@ public class Tab extends JPanel implements ITab {
     JLabel instructionsLabel = new JLabel("<html>" + "<body style=\"text-align: justify; text-justify: inter-word;\">"
         + "<p>Follow the instructions below to properly configure " + EXTENSION
         + " in order to be more eaily assess application(s) relying on Google 2FA services.</p>" + "<ol>"
-        + "<li>Specify the expression to match in the field below (accepts regex).</li>"
+        + "<li>Specify the expression to match in the field below (accepts regex). The Prefix and Suffix fields can be used to prepend or append text to the code when replacing the expression.</li>"
         + "<li>Configure a session handling rule under <b>'Project Options -> Sessions -> Session Handing Rules'</b> that invokes <b>"
         + EXTENSION + "</b>," + "<br/>"
         + "see https://portswigger.net/support/configuring-burp-suites-session-handling-rules for detailed information on how to configure Burp's session handling rules.</li>"
@@ -161,14 +162,64 @@ public class Tab extends JPanel implements ITab {
         + "</html>");
     instructionsLabel.putClientProperty("html.disable", null);
 
+    GridBagConstraints gridBagConstraints = new GridBagConstraints();
+    gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
+    gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+    gridBagConstraints.insets = new Insets(4, 8, 4, 8);
+    gridBagConstraints.gridy = 0;
+    gridBagConstraints.weightx = 1.0;
+    gridBagConstraints.weighty = 0;
+
+    configurationPanel.add(instructionsLabel, gridBagConstraints);
+
+    gridBagConstraints.gridy = 1;
+    gridBagConstraints.fill = GridBagConstraints.NONE;
+    gridBagConstraints.weightx = 0;
+
+
+    JPanel regexPanel = createStringConfigJPanel("Expression to match:",
+        (regexText) -> {
+          dataSet.setRegex(regexText);
+        },
+        (hasRegex) -> {
+          dataSet.setHasRegex(hasRegex);
+        });
+    configurationPanel.add(regexPanel, gridBagConstraints);
+
+    gridBagConstraints.gridy = 2;
+    gridBagConstraints.weighty = 0;
+    JPanel prefixPanel = createStringConfigJPanel("Prefix:",
+        (regexText) -> {
+          dataSet.setPrefix(regexText);
+        });
+    configurationPanel.add(prefixPanel, gridBagConstraints);
+
+    gridBagConstraints.gridy = 3;
+    gridBagConstraints.weighty = 1.0;
+    JPanel suffixPanel = createStringConfigJPanel("Suffix:",
+        (regexText) -> {
+          dataSet.setSuffix(regexText);
+        });
+    configurationPanel.add(suffixPanel, gridBagConstraints);
+
+    return configurationPanel;
+  }
+
+  private JPanel createStringConfigJPanel(String label, Consumer<String> textUpdateCallback) {
+    return createStringConfigJPanel(label, textUpdateCallback, null);
+  }
+
+  private JPanel createStringConfigJPanel(String label, Consumer<String> textUpdateCallback,
+                                          Consumer<Boolean> hasRegexCheckboxCallback) {
     JTextField regexTextField = new JTextField(32);
     regexTextField.getDocument().addDocumentListener(new DocumentListener() {
       void update() {
-        dataSet.setRegex(regexTextField.getText());
+        textUpdateCallback.accept(regexTextField.getText());
 
         if (DEBUG) {
           callbacks.printOutput(String.format("%s",
-              ((SessionHandlingAction) callbacks.getSessionHandlingActions().get(0)).getDataSet().toString()));
+              ((SessionHandlingAction) callbacks.getSessionHandlingActions().get(0))
+                  .getDataSet().toString()));
         }
       }
 
@@ -190,40 +241,32 @@ public class Tab extends JPanel implements ITab {
     // Prevents JTextField from collapsing on resizes...
     regexTextField.setMinimumSize(new Dimension(regexTextField.getPreferredSize()));
 
+    JPanel regexPanel = new JPanel();
+    regexPanel.add(new JLabel(label));
+    regexPanel.add(regexTextField);
+
+    if (hasRegexCheckboxCallback != null) {
+      JCheckBox hasRegexCheckbox = createJCheckBox(hasRegexCheckboxCallback);
+
+      regexPanel.add(hasRegexCheckbox);
+    }
+
+    return regexPanel;
+  }
+
+  private JCheckBox createJCheckBox(Consumer<Boolean> hasRegexCheckboxCallback) {
     JCheckBox hasRegexCheckbox = new JCheckBox("regex");
     hasRegexCheckbox.addActionListener(e -> {
       AbstractButton abstractButton = (AbstractButton) e.getSource();
-      dataSet.setHasRegex(abstractButton.isSelected());
+      hasRegexCheckboxCallback.accept(abstractButton.isSelected());
 
       if (DEBUG) {
         this.callbacks.printOutput(String.format("%s",
-            ((SessionHandlingAction) this.callbacks.getSessionHandlingActions().get(0)).getDataSet().toString()));
+            ((SessionHandlingAction) this.callbacks.getSessionHandlingActions().get(0))
+                .getDataSet().toString()));
       }
     });
-
-    JPanel regexPanel = new JPanel();
-    regexPanel.add(new JLabel("Expression to match:"));
-    regexPanel.add(regexTextField);
-    regexPanel.add(hasRegexCheckbox);
-
-    GridBagConstraints gridBagConstraints = new GridBagConstraints();
-    gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
-    gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.insets = new Insets(4, 8, 4, 8);
-    gridBagConstraints.gridy = 0;
-    gridBagConstraints.weightx = 1.0;
-    gridBagConstraints.weighty = 0;
-
-    configurationPanel.add(instructionsLabel, gridBagConstraints);
-
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.fill = GridBagConstraints.NONE;
-    gridBagConstraints.weightx = 0;
-    gridBagConstraints.weighty = 1.0;
-
-    configurationPanel.add(regexPanel, gridBagConstraints);
-
-    return configurationPanel;
+    return hasRegexCheckbox;
   }
 
   private JPanel initTwoFAPanel() {
