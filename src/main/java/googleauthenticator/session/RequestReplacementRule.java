@@ -10,12 +10,16 @@ public final class RequestReplacementRule {
     private final boolean bodyOnly;
     private final boolean hasOtpCaptureGroup;
 
-    public RequestReplacementRule(String matchExpression, boolean regularExpression, boolean bodyOnly) {
+    public RequestReplacementRule(
+            String matchExpression, boolean regularExpression, boolean bodyOnly) {
         if (matchExpression == null || matchExpression.isEmpty()) {
-            throw new IllegalArgumentException("Enter a non-empty placeholder or regular expression.");
+            throw new IllegalArgumentException(
+                    "Enter a non-empty placeholder or regular expression.");
         }
         try {
-            pattern = Pattern.compile(regularExpression ? matchExpression : Pattern.quote(matchExpression));
+            pattern =
+                    Pattern.compile(
+                            regularExpression ? matchExpression : Pattern.quote(matchExpression));
         } catch (PatternSyntaxException e) {
             throw new IllegalArgumentException("Invalid regular expression: " + e.getDescription());
         }
@@ -42,14 +46,17 @@ public final class RequestReplacementRule {
                 continue; // An optional named group did not participate.
             }
             if (matchStart == matchEnd) {
-                throw new IllegalArgumentException("The expression matched an empty value; request left unchanged.");
+                throw new IllegalArgumentException(
+                        "The expression matched an empty value; request left unchanged.");
             }
             rewrittenText.append(input, previousEnd, matchStart).append(code);
             previousEnd = matchEnd;
             replacementCount++;
         }
-        return new ReplacementResult(rewrittenText.append(input, previousEnd, input.length()).toString(), replacementCount);
+        return new ReplacementResult(
+                rewrittenText.append(input, previousEnd, input.length()).toString(),
+                replacementCount);
     }
 
-    public record ReplacementResult(String text, int replacementCount) { }
+    public record ReplacementResult(String text, int replacementCount) {}
 }

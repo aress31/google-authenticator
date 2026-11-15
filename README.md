@@ -4,8 +4,11 @@ Apply fresh time-based one-time passwords to requests through Burp session handl
 Works with Google Authenticator and other clients that provision standard **RFC 6238 TOTP** secrets,
 including Microsoft Authenticator's TOTP accounts. Push approvals and proprietary authentication methods are not supported.
 
-Version 2 modernises the extension with Java 21, Burp's Montoya API, a native theme-aware interface,
-and no bundled runtime dependencies. **Requires Burp Suite 2026.7 or later and Java 21 or later.**
+Version 2 modernises the extension with Java 21, Burp's Montoya API, and a native theme-aware interface
+using MigLayout. Layout dependencies are bundled in the standalone extension JAR.
+**Requires Burp Suite 2026.7 or later and Java 21 or later.**
+
+Burp's Montoya API applies the host theme to the interface and rule-preview dialogs.
 
 ![Google Authenticator interface](.github/assets/configuration-modern.png)
 
@@ -108,7 +111,7 @@ bash ./gradlew shadowJar              # Package only (no tests)
 
 Tests cover all 18 RFC 6238 reference vectors, leading zeroes and locale behavior, Base32 and URI validation,
 regex/literal matching, named captures, binary preservation and message lengths, encoded-body rejection,
-concurrent requests, clock rollover, and Swing start/edit/stop/clear/unload behavior.
+concurrent requests, clock rollover, and authenticator session start/stop/unload behavior.
 CI runs the build on Linux and Windows with Java 21. The Linux job uploads one downloadable extension JAR without a ZIP wrapper.
 A live Burp load test is still needed before release.
 Gradle's standard `check` task runs the tests and is included in `build`.
@@ -129,7 +132,7 @@ not in the repository. Keep `gradle/` and the wrapper scripts: they are part of 
 Use `UpperCamelCase` for classes, `lowerCamelCase` for methods and fields, and `UPPER_SNAKE_CASE` for constants.
 Class accessors use `get`/`is`; records retain their generated component accessors. Include units in time values
 such as `periodSeconds`, and use descriptive result fields such as `requestBytes` and `replacementCount`.
-Swing component names identify their role (`startButton`, `statusLabel`), factory methods start with `create`,
+Swing fields identify their role (`startButton`, `statusLabel`), factory methods start with `create`,
 and unit test classes follow `<ClassName>Test`.
 
 ### Upgrading from 1.x
@@ -154,3 +157,5 @@ Remove real shared secrets, provisioning URIs, passwords, and tokens from exampl
 ## License
 
 Copyright (C) 2018-2026 Alexandre Teyar. Licensed under [Apache License 2.0](LICENSE).
+
+The bundled MigLayout library is distributed under its [BSD license](src/main/resources/META-INF/LICENSE-MigLayout.txt).

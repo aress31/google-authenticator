@@ -1,6 +1,7 @@
 package googleauthenticator.session;
 
 import googleauthenticator.otp.TotpGenerator;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
@@ -8,9 +9,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /** Manages authenticator lifecycle and applies one immutable configuration snapshot per request. */
 public final class AuthenticatorSession implements AutoCloseable {
-    public record ActiveConfiguration(TotpGenerator generator, RequestReplacementRule replacementRule) { }
+    public record ActiveConfiguration(
+            TotpGenerator generator, RequestReplacementRule replacementRule) {}
 
-    private final AtomicReference<ActiveConfiguration> activeConfiguration = new AtomicReference<>();
+    private final AtomicReference<ActiveConfiguration> activeConfiguration =
+            new AtomicReference<>();
     private final AtomicLong updatedRequestCount = new AtomicLong();
     private final AtomicReference<String> lastError = new AtomicReference<>();
     private final Clock clock;
@@ -24,7 +27,8 @@ public final class AuthenticatorSession implements AutoCloseable {
         this.clock = clock;
     }
 
-    public synchronized void start(TotpGenerator generator, RequestReplacementRule replacementRule) {
+    public synchronized void start(
+            TotpGenerator generator, RequestReplacementRule replacementRule) {
         if (closed) {
             throw new IllegalStateException("The extension has been unloaded.");
         }
@@ -65,8 +69,11 @@ public final class AuthenticatorSession implements AutoCloseable {
             return new HttpRequestRewriter.RewriteResult(requestBytes, 0);
         }
         try {
-            var rewriteResult = HttpRequestRewriter.rewrite(requestBytes, configurationSnapshot.replacementRule(),
-                    configurationSnapshot.generator().generateCode(getCurrentTime()));
+            var rewriteResult =
+                    HttpRequestRewriter.rewrite(
+                            requestBytes,
+                            configurationSnapshot.replacementRule(),
+                            configurationSnapshot.generator().generateCode(getCurrentTime()));
             if (rewriteResult.replacementCount() > 0) {
                 updatedRequestCount.incrementAndGet();
                 lastError.set(null);

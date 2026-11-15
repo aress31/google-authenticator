@@ -5,6 +5,7 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.sessions.ActionResult;
 import burp.api.montoya.http.sessions.SessionHandlingAction;
 import burp.api.montoya.http.sessions.SessionHandlingActionData;
+
 import googleauthenticator.session.AuthenticatorSession;
 
 public final class TotpSessionHandlingAction implements SessionHandlingAction {
@@ -26,7 +27,8 @@ public final class TotpSessionHandlingAction implements SessionHandlingAction {
         if (rewriteResult.replacementCount() == 0) {
             return ActionResult.actionResult(request);
         }
-        return ActionResult.actionResult(HttpRequest.httpRequest(request.httpService(),
-                ByteArray.byteArray(rewriteResult.requestBytes())));
+        return ActionResult.actionResult(
+                HttpRequest.httpRequest(
+                        request.httpService(), ByteArray.byteArray(rewriteResult.requestBytes())));
     }
 }

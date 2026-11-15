@@ -10,7 +10,7 @@ import java.util.Map;
 
 /** Parses a manually entered secret or a standard authenticator provisioning URI. */
 public final class TotpInputParser {
-    private TotpInputParser() { }
+    private TotpInputParser() {}
 
     public static TotpGenerator parse(
             String input, TotpGenerator.Algorithm algorithm, int codeLength, int periodSeconds) {
@@ -20,8 +20,10 @@ public final class TotpInputParser {
         }
         try {
             URI provisioningUri = new URI(normalizedInput);
-            if (!"otpauth".equalsIgnoreCase(provisioningUri.getScheme()) || !"totp".equalsIgnoreCase(provisioningUri.getHost())
-                    || provisioningUri.getRawQuery() == null || provisioningUri.getFragment() != null
+            if (!"otpauth".equalsIgnoreCase(provisioningUri.getScheme())
+                    || !"totp".equalsIgnoreCase(provisioningUri.getHost())
+                    || provisioningUri.getRawQuery() == null
+                    || provisioningUri.getFragment() != null
                     || provisioningUri.getUserInfo() != null
                     || provisioningUri.getPort() != -1) {
                 throw invalidProvisioningUri();
@@ -30,15 +32,19 @@ public final class TotpInputParser {
             for (String queryParameter : provisioningUri.getRawQuery().split("&")) {
                 String[] parameterParts = queryParameter.split("=", 2);
                 String parameterName = URLDecoder.decode(parameterParts[0], StandardCharsets.UTF_8);
-                String parameterValue = parameterParts.length == 2
-                        ? URLDecoder.decode(parameterParts[1], StandardCharsets.UTF_8) : "";
+                String parameterValue =
+                        parameterParts.length == 2
+                                ? URLDecoder.decode(parameterParts[1], StandardCharsets.UTF_8)
+                                : "";
                 if (parameters.putIfAbsent(parameterName, parameterValue) != null) {
                     throw invalidProvisioningUri();
                 }
             }
             // URI defaults are part of the provisioning format, not the current form state.
-            return new TotpGenerator(parameters.get("secret"),
-                    TotpGenerator.Algorithm.valueOf(parameters.getOrDefault("algorithm", "SHA1").toUpperCase(Locale.ROOT)),
+            return new TotpGenerator(
+                    parameters.get("secret"),
+                    TotpGenerator.Algorithm.valueOf(
+                            parameters.getOrDefault("algorithm", "SHA1").toUpperCase(Locale.ROOT)),
                     Integer.parseInt(parameters.getOrDefault("digits", "6")),
                     Integer.parseInt(parameters.getOrDefault("period", "30")));
         } catch (URISyntaxException | IllegalArgumentException e) {
@@ -48,7 +54,8 @@ public final class TotpInputParser {
     }
 
     private static IllegalArgumentException invalidProvisioningUri() {
-        return new IllegalArgumentException("Invalid TOTP URI. Use otpauth://totp with a Base32 secret, "
-                + "SHA1/SHA256/SHA512, 6/8 digits and a period of 1-300 seconds. HOTP is not supported.");
+        return new IllegalArgumentException(
+                "Invalid TOTP URI. Use otpauth://totp with a Base32 secret, "
+                        + "SHA1/SHA256/SHA512, 6/8 digits and a period of 1-300 seconds. HOTP is not supported.");
     }
 }
