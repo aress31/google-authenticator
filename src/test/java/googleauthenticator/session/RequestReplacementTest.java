@@ -14,6 +14,9 @@ class RequestReplacementTest {
         assertEquals(
                 "x123456y [otp]other",
                 replacementRule.replaceMatches("x[otp].*y [otp]other", "123456").text());
+        var unmatched = replacementRule.replaceMatches("unchanged", "123456");
+        assertEquals("unchanged", unmatched.text());
+        assertEquals(0, unmatched.replacementCount());
     }
 
     @Test

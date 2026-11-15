@@ -15,33 +15,34 @@ final class HttpRequestRewriter {
             HttpRequest request, RequestReplacementRule replacementRule, String code) {
         ByteArray requestData = request.toByteArray();
         validateFraming(requestData);
-        ByteArray originalBody = request.body();
-        ByteArray target = replacementRule.isBodyOnly() ? originalBody : requestData;
+        boolean bodyOnly = replacementRule.isBodyOnly();
+        byte[] originalBody = request.body().getBytes();
         // Map each byte to one character so matching preserves binary body data.
-        String input = new String(target.getBytes(), StandardCharsets.ISO_8859_1);
+        String input =
+                new String(
+                        bodyOnly ? originalBody : requestData.getBytes(),
+                        StandardCharsets.ISO_8859_1);
         var replacementResult = replacementRule.replaceMatches(input, code);
-        if (replacementResult.replacementCount() == 0 || input.equals(replacementResult.text())) {
+        if (input.equals(replacementResult.text())) {
             return request;
         }
 
         ByteArray replacement =
                 ByteArray.byteArray(replacementResult.text().getBytes(StandardCharsets.ISO_8859_1));
-        if (!replacementRule.isBodyOnly()) {
+        if (!bodyOnly) {
             validateFraming(replacement);
         }
         HttpRequest rewrittenRequest =
-                replacementRule.isBodyOnly()
-                        ? request
-                        : HttpRequest.httpRequest(request.httpService(), replacement);
-        ByteArray rewrittenBody =
-                replacementRule.isBodyOnly() ? replacement : rewrittenRequest.body();
-        if (!Arrays.equals(originalBody.getBytes(), rewrittenBody.getBytes())) {
+                bodyOnly ? request : HttpRequest.httpRequest(request.httpService(), replacement);
+        ByteArray rewrittenBody = bodyOnly ? replacement : rewrittenRequest.body();
+        if (!Arrays.equals(originalBody, rewrittenBody.getBytes())) {
             if (hasEncodedBody(request) || hasEncodedBody(rewrittenRequest)) {
                 throw new IllegalArgumentException(
                         "Encoded or transfer-encoded bodies are not rewritten; request left unchanged.");
             }
             rewrittenRequest = rewrittenRequest.withBody(rewrittenBody);
         }
+
         return rewrittenRequest;
     }
 

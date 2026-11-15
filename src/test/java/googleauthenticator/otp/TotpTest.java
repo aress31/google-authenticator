@@ -55,6 +55,7 @@ class TotpTest {
                             timestamps[i],
                             expectedCodes[i][2]));
         }
+
         return vectors.build();
     }
 

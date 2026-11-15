@@ -18,10 +18,11 @@ public final class AuthenticatorSession implements AutoCloseable {
     public record ActiveConfiguration(
             TotpGenerator generator, RequestReplacementRule replacementRule) {}
 
-    @Getter private volatile ActiveConfiguration activeConfiguration;
-    private final AtomicLong updatedRequestCount = new AtomicLong();
-    @Getter private volatile String lastError;
     private final Clock clock;
+    private final AtomicLong updatedRequestCount = new AtomicLong();
+
+    @Getter private volatile ActiveConfiguration activeConfiguration;
+    @Getter private volatile String lastError;
     private boolean closed;
 
     public AuthenticatorSession() {
@@ -71,13 +72,14 @@ public final class AuthenticatorSession implements AutoCloseable {
                 updatedRequestCount.incrementAndGet();
                 lastError = null;
             }
+
             return rewrittenRequest;
         } catch (MalformedRequestException e) {
             lastError = "Burp could not parse the request; left unchanged.";
-            return request;
         } catch (IllegalArgumentException | IllegalStateException e) {
             lastError = e.getMessage();
-            return request;
         }
+
+        return request;
     }
 }

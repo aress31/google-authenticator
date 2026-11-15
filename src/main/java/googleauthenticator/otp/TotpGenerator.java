@@ -59,6 +59,7 @@ public final class TotpGenerator {
             int offset = hash[hash.length - 1] & 0x0f;
             int truncatedHash = ByteBuffer.wrap(hash).getInt(offset) & Integer.MAX_VALUE;
             int modulus = codeLength == 6 ? 1_000_000 : 100_000_000;
+
             return String.format(Locale.ROOT, "%0" + codeLength + "d", truncatedHash % modulus);
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(
@@ -111,6 +112,7 @@ public final class TotpGenerator {
         if ((bitBuffer & ((1 << bufferedBits) - 1)) != 0) {
             throw new IllegalArgumentException("The Base32 secret has invalid trailing bits.");
         }
+
         return decodedSecret.toByteArray();
     }
 

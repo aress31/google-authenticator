@@ -42,25 +42,31 @@ public final class AuthenticatorPanel extends JPanel {
 
     private final transient AuthenticatorSession session;
     private final transient Consumer<Component> applyTheme;
+    private final Timer refreshTimer;
+
     private final JPasswordField sharedSecretField = new JPasswordField(28);
     private final JComboBox<TotpGenerator.Algorithm> algorithmComboBox =
             new JComboBox<>(TotpGenerator.Algorithm.values());
     private final JComboBox<Integer> codeLengthComboBox = new JComboBox<>(new Integer[] {6, 8});
     private final JSpinner periodSpinner = new JSpinner(new SpinnerNumberModel(30, 1, 300, 1));
+
     private final JTextField matchExpressionField = new JTextField("{{TOTP}}", 28);
     private final JCheckBox regexCheckBox = new JCheckBox("Regular expression");
     private final JCheckBox bodyOnlyCheckBox = new JCheckBox("Request body only", true);
+
     private final JLabel codeLabel = new JLabel("------", SwingConstants.CENTER);
     private final JLabel countdownLabel =
             new JLabel("Start to generate a code", SwingConstants.CENTER);
     private final JProgressBar expiryProgressBar = new JProgressBar(0, 30);
+
     private final JLabel statusLabel = new JLabel("Paused. Add your shared secret to get started.");
     private final JLabel requestCountLabel = new JLabel("0 requests updated");
     private final JLabel errorLabel = new JLabel(" ");
+
     private final JButton startButton = new JButton("Apply & start");
     private final JButton stopButton = new JButton("Stop");
     private final JButton copyButton = new JButton("Copy code");
-    private final Timer refreshTimer;
+
     private boolean updatingForm;
     private boolean disposed;
 
@@ -142,6 +148,7 @@ public final class AuthenticatorPanel extends JPanel {
         panel.add(optionsPanel);
         panel.add(new JLabel("A provisioning URI supplies its own algorithm, digits and period."));
         panel.add(new JLabel("Secrets stay in memory and are never saved to settings or logs."));
+
         return panel;
     }
 
@@ -154,6 +161,7 @@ public final class AuthenticatorPanel extends JPanel {
         panel.add(countdownLabel);
         panel.add(expiryProgressBar);
         panel.add(copyButton);
+
         return panel;
     }
 
@@ -176,6 +184,7 @@ public final class AuthenticatorPanel extends JPanel {
         panel.add(
                 new JLabel(
                         "Regex: name a capture group (?<otp>...) to replace only that value and keep its surrounding text."));
+
         return panel;
     }
 
@@ -194,6 +203,7 @@ public final class AuthenticatorPanel extends JPanel {
         panel.add(statusLabel);
         panel.add(requestCountLabel);
         panel.add(errorLabel);
+
         return panel;
     }
 
@@ -208,6 +218,7 @@ public final class AuthenticatorPanel extends JPanel {
         panel.add(
                 new JLabel(
                         "3. Limit the rule's scope to the relevant login requests and tools. Verify updates in Logger."));
+
         return panel;
     }
 
@@ -268,6 +279,7 @@ public final class AuthenticatorPanel extends JPanel {
                 code = activeConfiguration.generator().generateCode(currentTime);
             } catch (IllegalArgumentException | IllegalStateException e) {
                 stopSession(e.getMessage());
+
                 return;
             }
             int codeMidpoint = code.length() / 2;
@@ -362,6 +374,7 @@ public final class AuthenticatorPanel extends JPanel {
     private static JPanel createSectionPanel(String title) {
         JPanel panel = new JPanel(new MigLayout("fillx, wrap 1", "[grow,fill]"));
         panel.setBorder(BorderFactory.createTitledBorder(title));
+
         return panel;
     }
 

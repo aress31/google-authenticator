@@ -1,7 +1,6 @@
 package googleauthenticator.otp;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -19,7 +18,7 @@ public final class TotpInputParser {
             return new TotpGenerator(normalizedInput, algorithm, codeLength, periodSeconds);
         }
         try {
-            URI provisioningUri = new URI(normalizedInput);
+            URI provisioningUri = URI.create(normalizedInput);
             if (!"otpauth".equalsIgnoreCase(provisioningUri.getScheme())
                     || !"totp".equalsIgnoreCase(provisioningUri.getHost())
                     || provisioningUri.getRawQuery() == null
@@ -47,7 +46,7 @@ public final class TotpInputParser {
                             parameters.getOrDefault("algorithm", "SHA1").toUpperCase(Locale.ROOT)),
                     Integer.parseInt(parameters.getOrDefault("digits", "6")),
                     Integer.parseInt(parameters.getOrDefault("period", "30")));
-        } catch (URISyntaxException | IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // URI exceptions can include the whole secret. Never expose their messages.
             throw invalidProvisioningUri();
         }

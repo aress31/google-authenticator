@@ -33,10 +33,13 @@ public final class RequestReplacementRule {
 
     public ReplacementResult replaceMatches(String input, String code) {
         Matcher matcher = pattern.matcher(input);
+        if (!matcher.find()) {
+            return new ReplacementResult(input, 0);
+        }
         StringBuilder rewrittenText = new StringBuilder();
         int previousEnd = 0;
         int replacementCount = 0;
-        while (matcher.find()) {
+        do {
             int matchStart = matcher.start(replacementGroupIndex);
             int matchEnd = matcher.end(replacementGroupIndex);
             if (matchStart < 0) {
@@ -49,7 +52,8 @@ public final class RequestReplacementRule {
             rewrittenText.append(input, previousEnd, matchStart).append(code);
             previousEnd = matchEnd;
             replacementCount++;
-        }
+        } while (matcher.find());
+
         return new ReplacementResult(
                 rewrittenText.append(input, previousEnd, input.length()).toString(),
                 replacementCount);

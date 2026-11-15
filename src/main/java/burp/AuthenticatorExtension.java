@@ -16,6 +16,7 @@ public final class AuthenticatorExtension implements BurpExtension {
             EXTENSION_NAME + ": 2FA code applied to selected parameter";
 
     private final AuthenticatorSession session = new AuthenticatorSession();
+
     private AuthenticatorPanel panel;
 
     @Override
@@ -39,6 +40,7 @@ public final class AuthenticatorExtension implements BurpExtension {
                 Thread.currentThread().interrupt();
             }
             montoyaApi.logging().logToError("Google Authenticator could not initialize.", e);
+
             return;
         }
         montoyaApi
