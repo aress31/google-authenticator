@@ -1,28 +1,31 @@
 package googleauthenticator.session;
 
+import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.requests.MalformedRequestException;
+
 import googleauthenticator.otp.TotpGenerator;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Manages authenticator lifecycle and applies one immutable configuration snapshot per request. */
+@RequiredArgsConstructor
 public final class AuthenticatorSession implements AutoCloseable {
     public record ActiveConfiguration(
             TotpGenerator generator, RequestReplacementRule replacementRule) {}
 
-    private volatile ActiveConfiguration activeConfiguration;
+    @Getter private volatile ActiveConfiguration activeConfiguration;
     private final AtomicLong updatedRequestCount = new AtomicLong();
-    private volatile String lastError;
+    @Getter private volatile String lastError;
     private final Clock clock;
     private boolean closed;
 
     public AuthenticatorSession() {
         this(Clock.systemUTC());
-    }
-
-    public AuthenticatorSession(Clock clock) {
-        this.clock = clock;
     }
 
     public synchronized void start(
@@ -45,10 +48,6 @@ public final class AuthenticatorSession implements AutoCloseable {
         stop();
     }
 
-    public ActiveConfiguration getActiveConfiguration() {
-        return activeConfiguration;
-    }
-
     public Instant getCurrentTime() {
         return clock.instant();
     }
@@ -57,29 +56,28 @@ public final class AuthenticatorSession implements AutoCloseable {
         return updatedRequestCount.get();
     }
 
-    public String getLastError() {
-        return lastError;
-    }
-
-    public HttpRequestRewriter.RewriteResult rewrite(byte[] requestBytes) {
+    public HttpRequest rewrite(HttpRequest request) {
         ActiveConfiguration configurationSnapshot = activeConfiguration;
         if (configurationSnapshot == null) {
-            return new HttpRequestRewriter.RewriteResult(requestBytes, 0);
+            return request;
         }
         try {
-            var rewriteResult =
+            HttpRequest rewrittenRequest =
                     HttpRequestRewriter.rewrite(
-                            requestBytes,
+                            request,
                             configurationSnapshot.replacementRule(),
                             configurationSnapshot.generator().generateCode(getCurrentTime()));
-            if (rewriteResult.replacementCount() > 0) {
+            if (rewrittenRequest != request) {
                 updatedRequestCount.incrementAndGet();
                 lastError = null;
             }
-            return rewriteResult;
+            return rewrittenRequest;
+        } catch (MalformedRequestException e) {
+            lastError = "Burp could not parse the request; left unchanged.";
+            return request;
         } catch (IllegalArgumentException | IllegalStateException e) {
             lastError = e.getMessage();
-            return new HttpRequestRewriter.RewriteResult(requestBytes, 0);
+            return request;
         }
     }
 }

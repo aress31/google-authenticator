@@ -1,5 +1,7 @@
 package googleauthenticator.session;
 
+import lombok.Getter;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -7,7 +9,7 @@ import java.util.regex.PatternSyntaxException;
 /** A compiled request replacement rule. A named group 'otp' limits replacement to that group. */
 public final class RequestReplacementRule {
     private final Pattern pattern;
-    private final boolean bodyOnly;
+    @Getter private final boolean bodyOnly;
     private final int replacementGroupIndex;
 
     public RequestReplacementRule(
@@ -27,10 +29,6 @@ public final class RequestReplacementRule {
         this.bodyOnly = bodyOnly;
         // Group 0 is the whole match when the rule has no named 'otp' group.
         replacementGroupIndex = pattern.namedGroups().getOrDefault("otp", 0);
-    }
-
-    public boolean isBodyOnly() {
-        return bodyOnly;
     }
 
     public ReplacementResult replaceMatches(String input, String code) {

@@ -1,5 +1,9 @@
 package googleauthenticator.otp;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
@@ -11,22 +15,19 @@ import javax.crypto.spec.SecretKeySpec;
 
 /** Generates RFC 6238 TOTP codes using the JDK's cryptographic providers. */
 public final class TotpGenerator {
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public enum Algorithm {
         SHA1("HmacSHA1"),
         SHA256("HmacSHA256"),
         SHA512("HmacSHA512");
 
         private final String hmacAlgorithmName;
-
-        Algorithm(String hmacAlgorithmName) {
-            this.hmacAlgorithmName = hmacAlgorithmName;
-        }
     }
 
     private final byte[] secretBytes;
-    private final Algorithm algorithm;
-    private final int codeLength;
-    private final int periodSeconds;
+    @Getter private final Algorithm algorithm;
+    @Getter private final int codeLength;
+    @Getter private final int periodSeconds;
 
     public TotpGenerator(
             String base32Secret, Algorithm algorithm, int codeLength, int periodSeconds) {
@@ -56,11 +57,7 @@ public final class TotpGenerator {
             mac.init(new SecretKeySpec(secretBytes, algorithm.hmacAlgorithmName));
             byte[] hash = mac.doFinal(ByteBuffer.allocate(Long.BYTES).putLong(counter).array());
             int offset = hash[hash.length - 1] & 0x0f;
-            int truncatedHash =
-                    ((hash[offset] & 0x7f) << 24)
-                            | ((hash[offset + 1] & 0xff) << 16)
-                            | ((hash[offset + 2] & 0xff) << 8)
-                            | (hash[offset + 3] & 0xff);
+            int truncatedHash = ByteBuffer.wrap(hash).getInt(offset) & Integer.MAX_VALUE;
             int modulus = codeLength == 6 ? 1_000_000 : 100_000_000;
             return String.format(Locale.ROOT, "%0" + codeLength + "d", truncatedHash % modulus);
         } catch (GeneralSecurityException e) {
@@ -71,18 +68,6 @@ public final class TotpGenerator {
 
     public int getSecondsRemaining(Instant instant) {
         return periodSeconds - Math.floorMod(instant.getEpochSecond(), periodSeconds);
-    }
-
-    public Algorithm getAlgorithm() {
-        return algorithm;
-    }
-
-    public int getCodeLength() {
-        return codeLength;
-    }
-
-    public int getPeriodSeconds() {
-        return periodSeconds;
     }
 
     private static byte[] decodeBase32(String input) {

@@ -225,11 +225,7 @@ public final class AuthenticatorPanel extends JPanel {
                             (TotpGenerator.Algorithm) algorithmComboBox.getSelectedItem(),
                             (Integer) codeLengthComboBox.getSelectedItem(),
                             ((Number) periodSpinner.getValue()).intValue());
-            RequestReplacementRule replacementRule =
-                    new RequestReplacementRule(
-                            matchExpressionField.getText(),
-                            regexCheckBox.isSelected(),
-                            bodyOnlyCheckBox.isSelected());
+            RequestReplacementRule replacementRule = createReplacementRule();
             updatingForm = true;
             algorithmComboBox.setSelectedItem(generator.getAlgorithm());
             codeLengthComboBox.setSelectedItem(generator.getCodeLength());
@@ -332,11 +328,7 @@ public final class AuthenticatorPanel extends JPanel {
         }
         try {
             var replacementResult =
-                    new RequestReplacementRule(
-                                    matchExpressionField.getText(),
-                                    regexCheckBox.isSelected(),
-                                    bodyOnlyCheckBox.isSelected())
-                            .replaceMatches(sampleTextArea.getText(), "123456");
+                    createReplacementRule().replaceMatches(sampleTextArea.getText(), "123456");
             JTextArea previewTextArea = new JTextArea(replacementResult.text(), 6, 48);
             previewTextArea.setEditable(false);
             JScrollPane previewScrollPane = new JScrollPane(previewTextArea);
@@ -350,6 +342,13 @@ public final class AuthenticatorPanel extends JPanel {
             JOptionPane.showMessageDialog(
                     this, e.getMessage(), "Invalid rule", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private RequestReplacementRule createReplacementRule() {
+        return new RequestReplacementRule(
+                matchExpressionField.getText(),
+                regexCheckBox.isSelected(),
+                bodyOnlyCheckBox.isSelected());
     }
 
     public void dispose() {

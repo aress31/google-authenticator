@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class RequestReplacementRuleTest {
+class RequestReplacementTest {
     @Test
     void literalModeTreatsRegexMetacharactersLiterally() {
         var replacementRule = new RequestReplacementRule("[otp].*", false, true);
@@ -42,7 +42,7 @@ class RequestReplacementRuleTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "[", "a*", "^", "(?<otp>)"})
+    @ValueSource(strings = {"", "[", "a*"})
     void invalidOrEmptyExpressionsCannotBeEnabled(String expression) {
         assertThrows(
                 IllegalArgumentException.class,

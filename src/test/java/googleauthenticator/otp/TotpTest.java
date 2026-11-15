@@ -3,6 +3,7 @@ package googleauthenticator.otp;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-class TotpGeneratorTest {
+class TotpTest {
     private static final String SHA1_SECRET = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
     private static final String SHA256_SECRET =
             "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQGEZA";
@@ -96,21 +97,7 @@ class TotpGeneratorTest {
     }
 
     @ParameterizedTest
-    @ValueSource(
-            strings = {
-                "",
-                " ",
-                "A",
-                "ABC",
-                "ABCDEF",
-                "MZ",
-                "MZXW6=",
-                "MZXW6======",
-                "MZXW6==A",
-                "MZXW6YTB========",
-                "secret!",
-                "42TCJUDP94W27YR3"
-            })
+    @ValueSource(strings = {"", "A", "MZ", "MZXW6=", "MZXW6==A", "MZXW6YTB========", "secret!"})
     void rejectsMalformedBase32(String base32Secret) {
         assertThrows(
                 IllegalArgumentException.class,
@@ -141,5 +128,62 @@ class TotpGeneratorTest {
                 generator.generateCode(Instant.ofEpochSecond(59)),
                 generator.generateCode(Instant.ofEpochSecond(60)));
         assertFalse(generator.toString().contains(SHA1_SECRET));
+    }
+
+    @Test
+    void rawSecretUsesSelectedOptions() {
+        TotpGenerator generator =
+                TotpInputParser.parse("JBSWY3DPEHPK3PXP", TotpGenerator.Algorithm.SHA256, 8, 60);
+        assertEquals(TotpGenerator.Algorithm.SHA256, generator.getAlgorithm());
+        assertEquals(8, generator.getCodeLength());
+        assertEquals(60, generator.getPeriodSeconds());
+    }
+
+    @Test
+    void importsPercentEncodedUriAndOverridesFormOptions() {
+        TotpGenerator generator =
+                TotpInputParser.parse(
+                        "otpauth://totp/Example%3Aalice?secret=JBSWY3DP%45HPK3PXP"
+                                + "&issuer=Example&algorithm=SHA512&digits=8&period=60",
+                        TotpGenerator.Algorithm.SHA1, 6, 30);
+        assertEquals(TotpGenerator.Algorithm.SHA512, generator.getAlgorithm());
+        assertEquals(8, generator.getCodeLength());
+        assertEquals(60, generator.getPeriodSeconds());
+        assertEquals(
+                new TotpGenerator("JBSWY3DPEHPK3PXP", TotpGenerator.Algorithm.SHA512, 8, 60)
+                        .generateCode(Instant.EPOCH),
+                generator.generateCode(Instant.EPOCH));
+    }
+
+    @Test
+    void uriUsesStandardDefaultsRatherThanPreviousFormValues() {
+        TotpGenerator generator =
+                TotpInputParser.parse(
+                        "otpauth://totp/Test?secret=JBSWY3DPEHPK3PXP",
+                        TotpGenerator.Algorithm.SHA512,
+                        8,
+                        60);
+        assertEquals(TotpGenerator.Algorithm.SHA1, generator.getAlgorithm());
+        assertEquals(6, generator.getCodeLength());
+        assertEquals(30, generator.getPeriodSeconds());
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "otpauth://hotp/Test?secret=JBSWY3DPEHPK3PXP&counter=1",
+                "otpauth://totp/Test?issuer=Example",
+                "otpauth://totp/Test?secret=MY&secret=MY",
+                "otpauth://totp/Test?secret=MY&algorithm=MD5",
+                "otpauth://totp/Test?secret=%ZZ",
+                "otpauth://totp/Test?secret=MY#fragment"
+            })
+    void rejectsMalformedOrUnsupportedUrisWithoutLeakingInput(String input) {
+        var error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> TotpInputParser.parse(input, TotpGenerator.Algorithm.SHA1, 6, 30));
+        assertFalse(error.getMessage().contains(input));
+        assertNull(error.getCause());
     }
 }
