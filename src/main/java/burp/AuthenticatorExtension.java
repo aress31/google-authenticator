@@ -23,7 +23,9 @@ public final class AuthenticatorExtension implements BurpExtension {
         AuthenticatorSession session = new AuthenticatorSession();
         var userInterface = montoyaApi.userInterface();
         try {
-            // Create Swing controls on the event thread before registering the session action.
+            // Swing controls need the UI thread; AuthenticatorSession and its clock do not.
+            // Burp does not guarantee which thread calls initialize(), and invokeAndWait()
+            // must only be called when we are not already on the UI thread.
             if (SwingUtilities.isEventDispatchThread()) {
                 initializeInterface(session, userInterface);
             } else {

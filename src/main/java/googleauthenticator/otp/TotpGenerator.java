@@ -70,7 +70,7 @@ public final class TotpGenerator {
     }
 
     public int getSecondsRemaining(Instant instant) {
-        return periodSeconds - (int) Math.floorMod(instant.getEpochSecond(), (long) periodSeconds);
+        return periodSeconds - Math.floorMod(instant.getEpochSecond(), periodSeconds);
     }
 
     public Algorithm getAlgorithm() {
@@ -131,12 +131,7 @@ public final class TotpGenerator {
 
     @Override
     public String toString() {
-        return "TotpGenerator[secret=REDACTED, algorithm="
-                + algorithm
-                + ", codeLength="
-                + codeLength
-                + ", periodSeconds="
-                + periodSeconds
-                + "]";
+        return "TotpGenerator[secret=REDACTED, algorithm=%s, codeLength=%s, periodSeconds=%s]"
+                .formatted(algorithm, codeLength, periodSeconds);
     }
 }

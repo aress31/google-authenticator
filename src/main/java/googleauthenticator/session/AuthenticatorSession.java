@@ -5,17 +5,15 @@ import googleauthenticator.otp.TotpGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 /** Manages authenticator lifecycle and applies one immutable configuration snapshot per request. */
 public final class AuthenticatorSession implements AutoCloseable {
     public record ActiveConfiguration(
             TotpGenerator generator, RequestReplacementRule replacementRule) {}
 
-    private final AtomicReference<ActiveConfiguration> activeConfiguration =
-            new AtomicReference<>();
+    private volatile ActiveConfiguration activeConfiguration;
     private final AtomicLong updatedRequestCount = new AtomicLong();
-    private final AtomicReference<String> lastError = new AtomicReference<>();
+    private volatile String lastError;
     private final Clock clock;
     private boolean closed;
 
@@ -32,13 +30,13 @@ public final class AuthenticatorSession implements AutoCloseable {
         if (closed) {
             throw new IllegalStateException("The extension has been unloaded.");
         }
-        activeConfiguration.set(new ActiveConfiguration(generator, replacementRule));
-        lastError.set(null);
+        activeConfiguration = new ActiveConfiguration(generator, replacementRule);
+        lastError = null;
     }
 
     public void stop() {
-        activeConfiguration.set(null);
-        lastError.set(null);
+        activeConfiguration = null;
+        lastError = null;
     }
 
     @Override
@@ -48,7 +46,7 @@ public final class AuthenticatorSession implements AutoCloseable {
     }
 
     public ActiveConfiguration getActiveConfiguration() {
-        return activeConfiguration.get();
+        return activeConfiguration;
     }
 
     public Instant getCurrentTime() {
@@ -60,11 +58,11 @@ public final class AuthenticatorSession implements AutoCloseable {
     }
 
     public String getLastError() {
-        return lastError.get();
+        return lastError;
     }
 
     public HttpRequestRewriter.RewriteResult rewrite(byte[] requestBytes) {
-        ActiveConfiguration configurationSnapshot = activeConfiguration.get();
+        ActiveConfiguration configurationSnapshot = activeConfiguration;
         if (configurationSnapshot == null) {
             return new HttpRequestRewriter.RewriteResult(requestBytes, 0);
         }
@@ -76,11 +74,11 @@ public final class AuthenticatorSession implements AutoCloseable {
                             configurationSnapshot.generator().generateCode(getCurrentTime()));
             if (rewriteResult.replacementCount() > 0) {
                 updatedRequestCount.incrementAndGet();
-                lastError.set(null);
+                lastError = null;
             }
             return rewriteResult;
         } catch (IllegalArgumentException | IllegalStateException e) {
-            lastError.set(e.getMessage());
+            lastError = e.getMessage();
             return new HttpRequestRewriter.RewriteResult(requestBytes, 0);
         }
     }

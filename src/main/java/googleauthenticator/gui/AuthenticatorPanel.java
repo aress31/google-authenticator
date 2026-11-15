@@ -290,8 +290,9 @@ public final class AuthenticatorPanel extends JPanel {
             expiryProgressBar.setValue(0);
         }
         requestCountLabel.setText(session.getUpdatedRequestCount() + " requests updated");
-        errorLabel.setText(session.getLastError() == null ? " " : session.getLastError());
-        errorLabel.setToolTipText(session.getLastError());
+        String lastError = session.getLastError();
+        errorLabel.setText(lastError == null ? " " : lastError);
+        errorLabel.setToolTipText(lastError);
     }
 
     private void copyCurrentCode() {

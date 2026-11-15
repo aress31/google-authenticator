@@ -17,9 +17,7 @@ public final class RequestReplacementRule {
                     "Enter a non-empty placeholder or regular expression.");
         }
         try {
-            pattern =
-                    Pattern.compile(
-                            regularExpression ? matchExpression : Pattern.quote(matchExpression));
+            pattern = Pattern.compile(matchExpression, regularExpression ? 0 : Pattern.LITERAL);
         } catch (PatternSyntaxException e) {
             throw new IllegalArgumentException("Invalid regular expression: " + e.getDescription());
         }
