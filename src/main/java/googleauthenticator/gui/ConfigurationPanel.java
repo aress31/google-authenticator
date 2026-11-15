@@ -187,6 +187,9 @@ final class ConfigurationPanel extends JPanel {
         optionsPanel.add(regexCheckBox);
         optionsPanel.add(bodyOnlyCheckBox);
         JButton previewRuleButton = new JButton("Test rule");
+        previewRuleButton.putClientProperty(
+                "FlatLaf.style",
+                "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
         previewRuleButton.addActionListener(
                 event -> RulePreviewDialog.show(this, this::readReplacementRule, applyTheme));
         optionsPanel.add(previewRuleButton, "skip 1, wmin 130, hmin 34");

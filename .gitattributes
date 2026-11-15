@@ -1,9 +1,3 @@
 * text=auto
-
-# Keep wrapper scripts usable on Windows and Unix.
 /gradlew text eol=lf
 *.bat text eol=crlf
-
-# Preserve binary assets without line-ending conversion.
-*.jar binary
-*.png binary

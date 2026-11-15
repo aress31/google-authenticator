@@ -97,6 +97,9 @@ public final class AuthenticatorPanel extends JPanel {
         buttonPanel.add(startButton, "wmin 150, hmin 34");
         buttonPanel.add(stopButton, "wmin 95, hmin 34");
         JButton clearSecretButton = new JButton("Clear secret");
+        clearSecretButton.putClientProperty(
+                "FlatLaf.style",
+                "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
         clearSecretButton.addActionListener(event -> {
             configurationPanel.clearSecret();
             stopSession("Secret cleared. Requests are left unchanged.");
