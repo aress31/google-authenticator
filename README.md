@@ -119,6 +119,19 @@ Generated `build/`, `.gradle/`, and IDE compiler output can be removed and will 
 Downloaded Gradle distributions and dependencies normally live in your user-level Gradle home (`~/.gradle`),
 not in the repository. Keep `gradle/` and the wrapper scripts: they are part of the build source.
 
+### Source layout and naming
+
+- `burp`: classes that directly implement Burp interfaces.
+- `googleauthenticator.otp`: `TotpGenerator` and `TotpInputParser`.
+- `googleauthenticator.session`: `AuthenticatorSession`, `RequestReplacementRule`, and `HttpRequestRewriter`.
+- `googleauthenticator.gui`: the Swing interface.
+
+Use `UpperCamelCase` for classes, `lowerCamelCase` for methods and fields, and `UPPER_SNAKE_CASE` for constants.
+Class accessors use `get`/`is`; records retain their generated component accessors. Include units in time values
+such as `periodSeconds`, and use descriptive result fields such as `requestBytes` and `replacementCount`.
+Swing component names identify their role (`startButton`, `statusLabel`), factory methods start with `create`,
+and unit test classes follow `<ClassName>Test`.
+
 ### Upgrading from 1.x
 
 Disable or unload the old extension before loading version 2. Re-enter the secret and match expression;

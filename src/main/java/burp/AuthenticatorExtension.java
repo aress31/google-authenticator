@@ -3,46 +3,46 @@ package burp;
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import googleauthenticator.gui.AuthenticatorPanel;
-import googleauthenticator.session.SessionState;
+import googleauthenticator.session.AuthenticatorSession;
 import javax.swing.SwingUtilities;
 
 public final class AuthenticatorExtension implements BurpExtension {
-    public static final String NAME = "Google Authenticator";
+    public static final String EXTENSION_NAME = "Google Authenticator";
     // Preserve the original action name so existing session rules can be reselected easily.
-    public static final String ACTION_NAME = NAME + ": 2FA code applied to selected parameter";
+    public static final String SESSION_ACTION_NAME = EXTENSION_NAME + ": 2FA code applied to selected parameter";
 
     @Override
-    public void initialize(MontoyaApi api) {
-        api.extension().setName(NAME);
-        SessionState state = new SessionState();
-        AuthenticatorPanel[] panel = new AuthenticatorPanel[1];
+    public void initialize(MontoyaApi montoyaApi) {
+        montoyaApi.extension().setName(EXTENSION_NAME);
+        AuthenticatorSession session = new AuthenticatorSession();
+        AuthenticatorPanel[] panelHolder = new AuthenticatorPanel[1];
         try {
-            Runnable initializeUi = () -> {
-                panel[0] = new AuthenticatorPanel(state);
-                api.userInterface().applyThemeToComponent(panel[0]);
-                api.userInterface().registerSuiteTab(NAME, panel[0]);
+            Runnable initializeInterface = () -> {
+                panelHolder[0] = new AuthenticatorPanel(session);
+                montoyaApi.userInterface().applyThemeToComponent(panelHolder[0]);
+                montoyaApi.userInterface().registerSuiteTab(EXTENSION_NAME, panelHolder[0]);
             };
             if (SwingUtilities.isEventDispatchThread()) {
-                initializeUi.run();
+                initializeInterface.run();
             } else {
-                SwingUtilities.invokeAndWait(initializeUi);
+                SwingUtilities.invokeAndWait(initializeInterface);
             }
         } catch (Exception e) {
-            state.close();
-            if (panel[0] != null) {
-                SwingUtilities.invokeLater(panel[0]::dispose);
+            session.close();
+            if (panelHolder[0] != null) {
+                SwingUtilities.invokeLater(panelHolder[0]::dispose);
             }
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            api.logging().logToError("Google Authenticator could not initialize its interface.");
+            montoyaApi.logging().logToError("Google Authenticator could not initialize its interface.");
             return;
         }
-        api.http().registerSessionHandlingAction(new TotpSessionHandlingAction(state));
-        api.extension().registerUnloadingHandler(() -> {
-            state.close();
-            SwingUtilities.invokeLater(panel[0]::dispose);
+        montoyaApi.http().registerSessionHandlingAction(new TotpSessionHandlingAction(session));
+        montoyaApi.extension().registerUnloadingHandler(() -> {
+            session.close();
+            SwingUtilities.invokeLater(panelHolder[0]::dispose);
         });
-        api.logging().logToOutput(NAME + " 2.0.0 initialized. Secrets are held in memory only.");
+        montoyaApi.logging().logToOutput(EXTENSION_NAME + " 2.0.0 initialized. Secrets are held in memory only.");
     }
 }

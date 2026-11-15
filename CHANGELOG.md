@@ -17,6 +17,8 @@
 - Use GradleUp Shadow for the loadable extension JAR, a Java 21 toolchain,
   build/configuration caches and standard Gradle lifecycle tasks.
 - Update installation, session rule setup, migration and privacy documentation.
+- Standardise class and method names, explicit time units, result fields and Swing component names;
+  align unit test classes with their subjects and document the naming conventions.
 
 This release requires Burp Suite 2026.7 or newer and Java 21 or newer. Reconfigure or reselect
 the extension action in existing session handling rules when upgrading from 1.x.

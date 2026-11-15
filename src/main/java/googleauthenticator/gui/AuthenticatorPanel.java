@@ -1,18 +1,18 @@
 package googleauthenticator.gui;
 
-import googleauthenticator.otp.Provisioning;
-import googleauthenticator.otp.Totp;
-import googleauthenticator.session.MatchRule;
-import googleauthenticator.session.SessionState;
+import googleauthenticator.otp.TotpGenerator;
+import googleauthenticator.otp.TotpInputParser;
+import googleauthenticator.session.AuthenticatorSession;
+import googleauthenticator.session.RequestReplacementRule;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Component;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -32,10 +32,10 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.Scrollable;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.Scrollable;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
@@ -47,147 +47,147 @@ import javax.swing.event.DocumentListener;
 public final class AuthenticatorPanel extends JPanel {
     private static final long serialVersionUID = 1L;
 
-    private final transient SessionState state;
-    private final JPasswordField secret = new JPasswordField(28);
-    private final JComboBox<Totp.Algorithm> algorithm = new JComboBox<>(Totp.Algorithm.values());
-    private final JComboBox<Integer> digits = new JComboBox<>(new Integer[] {6, 8});
-    private final JSpinner period = new JSpinner(new SpinnerNumberModel(30, 1, 300, 1));
-    private final JTextField expression = new JTextField("{{TOTP}}", 28);
-    private final JCheckBox regex = new JCheckBox("Regular expression");
-    private final JCheckBox bodyOnly = new JCheckBox("Request body only", true);
-    private final JLabel code = new JLabel("------", SwingConstants.CENTER);
-    private final JLabel countdown = new JLabel("Start to generate a code", SwingConstants.CENTER);
-    private final JProgressBar progress = new JProgressBar(0, 30);
-    private final JLabel status = new JLabel("Paused. Add your shared secret to get started.");
-    private final JLabel activity = new JLabel("0 requests updated");
-    private final JLabel issue = new JLabel(" ");
-    private final JButton start = new JButton("Apply & start");
-    private final JButton stop = new JButton("Stop");
-    private final JButton copy = new JButton("Copy code");
-    private final Timer timer;
-    private boolean updating;
+    private final transient AuthenticatorSession session;
+    private final JPasswordField sharedSecretField = new JPasswordField(28);
+    private final JComboBox<TotpGenerator.Algorithm> algorithmComboBox = new JComboBox<>(TotpGenerator.Algorithm.values());
+    private final JComboBox<Integer> codeLengthComboBox = new JComboBox<>(new Integer[] {6, 8});
+    private final JSpinner periodSpinner = new JSpinner(new SpinnerNumberModel(30, 1, 300, 1));
+    private final JTextField matchExpressionField = new JTextField("{{TOTP}}", 28);
+    private final JCheckBox regexCheckBox = new JCheckBox("Regular expression");
+    private final JCheckBox bodyOnlyCheckBox = new JCheckBox("Request body only", true);
+    private final JLabel codeLabel = new JLabel("------", SwingConstants.CENTER);
+    private final JLabel countdownLabel = new JLabel("Start to generate a code", SwingConstants.CENTER);
+    private final JProgressBar expiryProgressBar = new JProgressBar(0, 30);
+    private final JLabel statusLabel = new JLabel("Paused. Add your shared secret to get started.");
+    private final JLabel requestCountLabel = new JLabel("0 requests updated");
+    private final JLabel errorLabel = new JLabel(" ");
+    private final JButton startButton = new JButton("Apply & start");
+    private final JButton stopButton = new JButton("Stop");
+    private final JButton copyButton = new JButton("Copy code");
+    private final Timer refreshTimer;
+    private boolean updatingForm;
     private boolean disposed;
 
-    public AuthenticatorPanel(SessionState state) {
+    public AuthenticatorPanel(AuthenticatorSession session) {
         super(new BorderLayout());
-        this.state = state;
+        this.session = session;
         setName("authenticatorPanel");
-        secret.setName("secret");
-        expression.setName("expression");
-        start.setName("start");
-        stop.setName("stop");
-        code.setName("code");
-        status.setName("status");
-        algorithm.setName("algorithm");
-        digits.setName("digits");
-        period.setName("period");
-        ((JSpinner.DefaultEditor) period.getEditor()).getTextField().setName("periodInput");
-        regex.setName("regex");
-        bodyOnly.setName("bodyOnly");
-        secret.getAccessibleContext().setAccessibleName("Shared secret or TOTP provisioning URI");
-        expression.getAccessibleContext().setAccessibleName("Expression to replace");
-        algorithm.getAccessibleContext().setAccessibleName("HMAC algorithm");
-        digits.getAccessibleContext().setAccessibleName("Code digits");
-        period.getAccessibleContext().setAccessibleName("Period in seconds");
+        sharedSecretField.setName("sharedSecretField");
+        matchExpressionField.setName("matchExpressionField");
+        startButton.setName("startButton");
+        stopButton.setName("stopButton");
+        codeLabel.setName("codeLabel");
+        statusLabel.setName("statusLabel");
+        algorithmComboBox.setName("algorithmComboBox");
+        codeLengthComboBox.setName("codeLengthComboBox");
+        periodSpinner.setName("periodSpinner");
+        ((JSpinner.DefaultEditor) periodSpinner.getEditor()).getTextField().setName("periodField");
+        regexCheckBox.setName("regexCheckBox");
+        bodyOnlyCheckBox.setName("bodyOnlyCheckBox");
+        sharedSecretField.getAccessibleContext().setAccessibleName("Shared secret or TOTP provisioning URI");
+        matchExpressionField.getAccessibleContext().setAccessibleName("Expression to replace");
+        algorithmComboBox.getAccessibleContext().setAccessibleName("HMAC algorithm");
+        codeLengthComboBox.getAccessibleContext().setAccessibleName("Code digits");
+        periodSpinner.getAccessibleContext().setAccessibleName("Period in seconds");
 
-        JPanel content = new ResponsiveContent();
-        content.setBorder(BorderFactory.createEmptyBorder(24, 28, 24, 28));
-        GridBagConstraints cell = new GridBagConstraints();
-        cell.gridx = 0;
-        cell.gridy = 0;
-        cell.gridwidth = 2;
-        cell.weightx = 1;
-        cell.fill = GridBagConstraints.HORIZONTAL;
-        cell.anchor = GridBagConstraints.NORTHWEST;
-        cell.insets = new Insets(0, 0, 20, 0);
-        JPanel heading = vertical();
-        heading.add(title("Google Authenticator", 24));
-        heading.add(Box.createVerticalStrut(6));
-        heading.add(new JLabel("Fresh one-time codes, applied through Burp session handling rules."));
-        content.add(heading, cell);
+        JPanel contentPanel = new ResponsiveContentPanel();
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(24, 28, 24, 28));
+        GridBagConstraints layoutConstraints = new GridBagConstraints();
+        layoutConstraints.gridx = 0;
+        layoutConstraints.gridy = 0;
+        layoutConstraints.gridwidth = 2;
+        layoutConstraints.weightx = 1;
+        layoutConstraints.fill = GridBagConstraints.HORIZONTAL;
+        layoutConstraints.anchor = GridBagConstraints.NORTHWEST;
+        layoutConstraints.insets = new Insets(0, 0, 20, 0);
+        JPanel headingPanel = createVerticalPanel();
+        headingPanel.add(createHeadingLabel("Google Authenticator", 24));
+        headingPanel.add(Box.createVerticalStrut(6));
+        headingPanel.add(new JLabel("Fresh one-time codes, applied through Burp session handling rules."));
+        contentPanel.add(headingPanel, layoutConstraints);
 
-        cell.gridy++;
-        cell.gridwidth = 1;
-        cell.weightx = 0.68;
-        cell.insets = new Insets(0, 0, 20, 24);
-        content.add(credentials(), cell);
-        cell.gridx = 1;
-        cell.weightx = 0.32;
-        cell.insets = new Insets(0, 0, 20, 0);
-        cell.fill = GridBagConstraints.BOTH;
-        content.add(codePanel(), cell);
+        layoutConstraints.gridy++;
+        layoutConstraints.gridwidth = 1;
+        layoutConstraints.weightx = 0.68;
+        layoutConstraints.insets = new Insets(0, 0, 20, 24);
+        contentPanel.add(createAuthenticatorSettingsPanel(), layoutConstraints);
+        layoutConstraints.gridx = 1;
+        layoutConstraints.weightx = 0.32;
+        layoutConstraints.insets = new Insets(0, 0, 20, 0);
+        layoutConstraints.fill = GridBagConstraints.BOTH;
+        contentPanel.add(createCodePanel(), layoutConstraints);
 
-        cell.gridx = 0;
-        cell.gridy++;
-        cell.gridwidth = 2;
-        cell.weightx = 1;
-        cell.fill = GridBagConstraints.HORIZONTAL;
-        content.add(rulePanel(), cell);
-        cell.gridy++;
-        content.add(controls(), cell);
-        cell.gridy++;
-        content.add(instructions(), cell);
-        cell.gridy++;
-        cell.weighty = 1;
-        content.add(new JPanel(), cell);
+        layoutConstraints.gridx = 0;
+        layoutConstraints.gridy++;
+        layoutConstraints.gridwidth = 2;
+        layoutConstraints.weightx = 1;
+        layoutConstraints.fill = GridBagConstraints.HORIZONTAL;
+        contentPanel.add(createReplacementPanel(), layoutConstraints);
+        layoutConstraints.gridy++;
+        contentPanel.add(createActionPanel(), layoutConstraints);
+        layoutConstraints.gridy++;
+        contentPanel.add(createInstructionsPanel(), layoutConstraints);
+        layoutConstraints.gridy++;
+        layoutConstraints.weighty = 1;
+        contentPanel.add(new JPanel(), layoutConstraints);
 
-        JScrollPane scroll = new JScrollPane(content);
+        JScrollPane scroll = new JScrollPane(contentPanel);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         add(scroll, BorderLayout.CENTER);
         setPreferredSize(new Dimension(1000, 740));
 
-        DocumentListener changed = new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent event) { pauseForEdit(); }
-            @Override public void removeUpdate(DocumentEvent event) { pauseForEdit(); }
-            @Override public void changedUpdate(DocumentEvent event) { pauseForEdit(); }
+        DocumentListener configurationChangeListener = new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent event) { pauseSessionForEdit(); }
+            @Override public void removeUpdate(DocumentEvent event) { pauseSessionForEdit(); }
+            @Override public void changedUpdate(DocumentEvent event) { pauseSessionForEdit(); }
         };
-        secret.getDocument().addDocumentListener(changed);
-        expression.getDocument().addDocumentListener(changed);
-        ((JSpinner.DefaultEditor) period.getEditor()).getTextField().getDocument().addDocumentListener(changed);
-        algorithm.addActionListener(event -> pauseForEdit());
-        digits.addActionListener(event -> pauseForEdit());
-        period.addChangeListener(event -> pauseForEdit());
-        regex.addActionListener(event -> pauseForEdit());
-        bodyOnly.addActionListener(event -> pauseForEdit());
-        start.addActionListener(event -> start());
-        secret.addActionListener(event -> start());
-        stop.addActionListener(event -> {
-            state.stop();
-            status.setText("Paused. Requests are left unchanged.");
-            refresh();
+        sharedSecretField.getDocument().addDocumentListener(configurationChangeListener);
+        matchExpressionField.getDocument().addDocumentListener(configurationChangeListener);
+        ((JSpinner.DefaultEditor) periodSpinner.getEditor()).getTextField().getDocument().addDocumentListener(configurationChangeListener);
+        algorithmComboBox.addActionListener(event -> pauseSessionForEdit());
+        codeLengthComboBox.addActionListener(event -> pauseSessionForEdit());
+        periodSpinner.addChangeListener(event -> pauseSessionForEdit());
+        regexCheckBox.addActionListener(event -> pauseSessionForEdit());
+        bodyOnlyCheckBox.addActionListener(event -> pauseSessionForEdit());
+        startButton.addActionListener(event -> startSession());
+        sharedSecretField.addActionListener(event -> startSession());
+        stopButton.addActionListener(event -> {
+            session.stop();
+            statusLabel.setText("Paused. Requests are left unchanged.");
+            refreshDisplay();
         });
-        copy.addActionListener(event -> copyCode());
-        timer = new Timer(250, event -> refresh());
-        timer.start();
-        refresh();
+        copyButton.addActionListener(event -> copyCurrentCode());
+        refreshTimer = new Timer(250, event -> refreshDisplay());
+        refreshTimer.start();
+        refreshDisplay();
     }
 
-    private JPanel credentials() {
-        JPanel panel = vertical();
-        panel.add(title("Authenticator", 17));
+    private JPanel createAuthenticatorSettingsPanel() {
+        JPanel panel = createVerticalPanel();
+        panel.add(createHeadingLabel("Authenticator", 17));
         panel.add(Box.createVerticalStrut(14));
         JLabel label = new JLabel("Shared secret or otpauth://totp URI");
-        label.setLabelFor(secret);
+        label.setLabelFor(sharedSecretField);
         panel.add(label);
         panel.add(Box.createVerticalStrut(6));
-        secret.setMaximumSize(new Dimension(Integer.MAX_VALUE, secret.getPreferredSize().height));
-        secret.setAlignmentX(LEFT_ALIGNMENT);
-        panel.add(secret);
+        sharedSecretField.setMaximumSize(new Dimension(Integer.MAX_VALUE, sharedSecretField.getPreferredSize().height));
+        sharedSecretField.setAlignmentX(LEFT_ALIGNMENT);
+        panel.add(sharedSecretField);
         panel.add(Box.createVerticalStrut(6));
-        JCheckBox reveal = new JCheckBox("Show secret");
-        char echo = secret.getEchoChar();
-        reveal.addActionListener(event -> secret.setEchoChar(reveal.isSelected() ? (char) 0 : echo));
-        panel.add(reveal);
+        JCheckBox showSecretCheckBox = new JCheckBox("Show secret");
+        char secretEchoCharacter = sharedSecretField.getEchoChar();
+        showSecretCheckBox.addActionListener(event -> sharedSecretField.setEchoChar(showSecretCheckBox.isSelected() ? (char) 0 : secretEchoCharacter));
+        panel.add(showSecretCheckBox);
         panel.add(Box.createVerticalStrut(12));
-        JPanel options = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
-        labeled(options, "Algorithm ", algorithm);
-        options.add(Box.createHorizontalStrut(14));
-        labeled(options, "Digits ", digits);
-        options.add(Box.createHorizontalStrut(14));
-        labeled(options, "Period (s) ", period);
-        options.setAlignmentX(LEFT_ALIGNMENT);
-        panel.add(options);
+        JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
+        addLabeledControl(optionsPanel, "Algorithm ", algorithmComboBox);
+        optionsPanel.add(Box.createHorizontalStrut(14));
+        addLabeledControl(optionsPanel, "Digits ", codeLengthComboBox);
+        optionsPanel.add(Box.createHorizontalStrut(14));
+        addLabeledControl(optionsPanel, "Period (s) ", periodSpinner);
+        optionsPanel.setAlignmentX(LEFT_ALIGNMENT);
+        panel.add(optionsPanel);
         panel.add(Box.createVerticalStrut(10));
         panel.add(new JLabel("A provisioning URI supplies its own algorithm, digits and period."));
         panel.add(Box.createVerticalStrut(6));
@@ -195,94 +195,94 @@ public final class AuthenticatorPanel extends JPanel {
         return panel;
     }
 
-    private JPanel codePanel() {
+    private JPanel createCodePanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 12));
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(borderColor()), BorderFactory.createEmptyBorder(16, 20, 16, 20)));
-        panel.add(title("Current code", 15), BorderLayout.NORTH);
-        code.setFont(new Font(Font.MONOSPACED, Font.BOLD, 40));
-        code.getAccessibleContext().setAccessibleName("Current one-time code");
-        panel.add(code, BorderLayout.CENTER);
-        JPanel footer = new JPanel(new GridBagLayout());
-        GridBagConstraints cell = new GridBagConstraints();
-        cell.gridx = 0;
-        cell.gridy = 0;
-        cell.fill = GridBagConstraints.HORIZONTAL;
-        cell.weightx = 1;
-        footer.add(countdown, cell);
-        cell.gridy++;
-        cell.insets = new Insets(10, 0, 10, 0);
-        progress.setPreferredSize(new Dimension(190, 5));
-        footer.add(progress, cell);
-        cell.gridy++;
-        cell.insets = new Insets(0, 0, 0, 0);
-        footer.add(copy, cell);
-        panel.add(footer, BorderLayout.SOUTH);
+                BorderFactory.createLineBorder(getBorderColor()), BorderFactory.createEmptyBorder(16, 20, 16, 20)));
+        panel.add(createHeadingLabel("Current code", 15), BorderLayout.NORTH);
+        codeLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 40));
+        codeLabel.getAccessibleContext().setAccessibleName("Current one-time code");
+        panel.add(codeLabel, BorderLayout.CENTER);
+        JPanel footerPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints layoutConstraints = new GridBagConstraints();
+        layoutConstraints.gridx = 0;
+        layoutConstraints.gridy = 0;
+        layoutConstraints.fill = GridBagConstraints.HORIZONTAL;
+        layoutConstraints.weightx = 1;
+        footerPanel.add(countdownLabel, layoutConstraints);
+        layoutConstraints.gridy++;
+        layoutConstraints.insets = new Insets(10, 0, 10, 0);
+        expiryProgressBar.setPreferredSize(new Dimension(190, 5));
+        footerPanel.add(expiryProgressBar, layoutConstraints);
+        layoutConstraints.gridy++;
+        layoutConstraints.insets = new Insets(0, 0, 0, 0);
+        footerPanel.add(copyButton, layoutConstraints);
+        panel.add(footerPanel, BorderLayout.SOUTH);
         return panel;
     }
 
-    private JPanel rulePanel() {
-        JPanel panel = vertical();
-        panel.add(title("Request replacement", 17));
+    private JPanel createReplacementPanel() {
+        JPanel panel = createVerticalPanel();
+        panel.add(createHeadingLabel("Request replacement", 17));
         panel.add(Box.createVerticalStrut(12));
         JLabel label = new JLabel("Placeholder or expression to replace");
-        label.setLabelFor(expression);
+        label.setLabelFor(matchExpressionField);
         panel.add(label);
         panel.add(Box.createVerticalStrut(6));
-        expression.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
-        expression.setMaximumSize(new Dimension(Integer.MAX_VALUE, expression.getPreferredSize().height));
-        expression.setAlignmentX(LEFT_ALIGNMENT);
-        panel.add(expression);
-        JPanel options = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 8));
-        options.add(regex);
-        options.add(Box.createHorizontalStrut(20));
-        options.add(bodyOnly);
-        options.add(Box.createHorizontalStrut(20));
-        JButton test = new JButton("Test rule\u2026");
-        test.addActionListener(event -> testRule());
-        options.add(test);
-        options.setAlignmentX(LEFT_ALIGNMENT);
-        panel.add(options);
+        matchExpressionField.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        matchExpressionField.setMaximumSize(new Dimension(Integer.MAX_VALUE, matchExpressionField.getPreferredSize().height));
+        matchExpressionField.setAlignmentX(LEFT_ALIGNMENT);
+        panel.add(matchExpressionField);
+        JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 8));
+        optionsPanel.add(regexCheckBox);
+        optionsPanel.add(Box.createHorizontalStrut(20));
+        optionsPanel.add(bodyOnlyCheckBox);
+        optionsPanel.add(Box.createHorizontalStrut(20));
+        JButton previewRuleButton = new JButton("Test rule\u2026");
+        previewRuleButton.addActionListener(event -> previewReplacementRule());
+        optionsPanel.add(previewRuleButton);
+        optionsPanel.setAlignmentX(LEFT_ALIGNMENT);
+        panel.add(optionsPanel);
         panel.add(new JLabel("Use {{TOTP}} in the request body for precise replacement. All matches are updated."));
         panel.add(Box.createVerticalStrut(5));
         panel.add(new JLabel("Regex: name a capture group (?<otp>...) to replace only that value and keep its surrounding text."));
         return panel;
     }
 
-    private JPanel controls() {
-        JPanel panel = vertical();
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
-        start.setFont(start.getFont().deriveFont(Font.BOLD));
-        buttons.add(start);
-        buttons.add(Box.createHorizontalStrut(8));
-        buttons.add(stop);
-        buttons.add(Box.createHorizontalStrut(8));
-        JButton clear = new JButton("Clear secret");
-        clear.setName("clear");
-        clear.addActionListener(event -> {
-            state.stop();
-            secret.setText("");
-            status.setText("Secret cleared. Requests are left unchanged.");
-            refresh();
+    private JPanel createActionPanel() {
+        JPanel panel = createVerticalPanel();
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
+        startButton.setFont(startButton.getFont().deriveFont(Font.BOLD));
+        buttonPanel.add(startButton);
+        buttonPanel.add(Box.createHorizontalStrut(8));
+        buttonPanel.add(stopButton);
+        buttonPanel.add(Box.createHorizontalStrut(8));
+        JButton clearSecretButton = new JButton("Clear secret");
+        clearSecretButton.setName("clearSecretButton");
+        clearSecretButton.addActionListener(event -> {
+            session.stop();
+            sharedSecretField.setText("");
+            statusLabel.setText("Secret cleared. Requests are left unchanged.");
+            refreshDisplay();
         });
-        buttons.add(clear);
-        buttons.setAlignmentX(LEFT_ALIGNMENT);
-        panel.add(buttons);
+        buttonPanel.add(clearSecretButton);
+        buttonPanel.setAlignmentX(LEFT_ALIGNMENT);
+        panel.add(buttonPanel);
         panel.add(Box.createVerticalStrut(12));
-        panel.add(status);
+        panel.add(statusLabel);
         panel.add(Box.createVerticalStrut(6));
-        panel.add(activity);
+        panel.add(requestCountLabel);
         panel.add(Box.createVerticalStrut(6));
-        panel.add(issue);
+        panel.add(errorLabel);
         return panel;
     }
 
-    private static JPanel instructions() {
-        JPanel panel = vertical();
+    private static JPanel createInstructionsPanel() {
+        JPanel panel = createVerticalPanel();
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, borderColor()),
+                BorderFactory.createMatteBorder(1, 0, 0, 0, getBorderColor()),
                 BorderFactory.createEmptyBorder(18, 0, 0, 0)));
-        panel.add(title("Connect to a session handling rule", 15));
+        panel.add(createHeadingLabel("Connect to a session handling rule", 15));
         panel.add(Box.createVerticalStrut(8));
         panel.add(new JLabel("1. Open Settings > Sessions > Session handling rules and add or edit a rule."));
         panel.add(Box.createVerticalStrut(5));
@@ -292,99 +292,101 @@ public final class AuthenticatorPanel extends JPanel {
         return panel;
     }
 
-    private void start() {
+    private void startSession() {
         if (disposed) { return; }
-        state.stop();
-        char[] password = secret.getPassword();
+        session.stop();
+        char[] sharedSecretCharacters = sharedSecretField.getPassword();
         try {
-            period.commitEdit();
-            Totp totp = Provisioning.parse(new String(password), (Totp.Algorithm) algorithm.getSelectedItem(),
-                    (Integer) digits.getSelectedItem(), ((Number) period.getValue()).intValue());
-            MatchRule rule = new MatchRule(expression.getText(), regex.isSelected(), bodyOnly.isSelected());
-            updating = true;
-            algorithm.setSelectedItem(totp.algorithm());
-            digits.setSelectedItem(totp.digits());
-            period.setValue(totp.period());
-            state.start(totp, rule);
-            status.setText("Running. Matching requests will receive a fresh code.");
+            periodSpinner.commitEdit();
+            TotpGenerator generator = TotpInputParser.parse(new String(sharedSecretCharacters),
+                    (TotpGenerator.Algorithm) algorithmComboBox.getSelectedItem(),
+                    (Integer) codeLengthComboBox.getSelectedItem(), ((Number) periodSpinner.getValue()).intValue());
+            RequestReplacementRule replacementRule = new RequestReplacementRule(
+                    matchExpressionField.getText(), regexCheckBox.isSelected(), bodyOnlyCheckBox.isSelected());
+            updatingForm = true;
+            algorithmComboBox.setSelectedItem(generator.getAlgorithm());
+            codeLengthComboBox.setSelectedItem(generator.getCodeLength());
+            periodSpinner.setValue(generator.getPeriodSeconds());
+            session.start(generator, replacementRule);
+            statusLabel.setText("Running. Matching requests will receive a fresh code.");
         } catch (IllegalArgumentException | IllegalStateException e) {
-            status.setText(e.getMessage());
+            statusLabel.setText(e.getMessage());
         } catch (java.text.ParseException e) {
-            status.setText("Enter a whole-number period between 1 and 300 seconds.");
+            statusLabel.setText("Enter a whole-number period between 1 and 300 seconds.");
         } finally {
-            Arrays.fill(password, '\0');
-            updating = false;
-            refresh();
+            Arrays.fill(sharedSecretCharacters, '\0');
+            updatingForm = false;
+            refreshDisplay();
         }
     }
 
-    private void pauseForEdit() {
-        if (updating) { return; }
-        state.stop();
-        status.setText("Configuration changed. Apply & start to enable request updates.");
-        refresh();
+    private void pauseSessionForEdit() {
+        if (updatingForm) { return; }
+        session.stop();
+        statusLabel.setText("Configuration changed. Apply & start to enable request updates.");
+        refreshDisplay();
     }
 
-    private void refresh() {
-        var configuration = state.configuration();
-        boolean running = configuration != null;
-        stop.setEnabled(running);
-        copy.setEnabled(running);
-        if (running) {
-            Instant now = state.now();
-            String token;
+    private void refreshDisplay() {
+        var activeConfiguration = session.getActiveConfiguration();
+        boolean sessionRunning = activeConfiguration != null;
+        stopButton.setEnabled(sessionRunning);
+        copyButton.setEnabled(sessionRunning);
+        if (sessionRunning) {
+            Instant currentTime = session.getCurrentTime();
+            String code;
             try {
-                token = configuration.totp().codeAt(now);
+                code = activeConfiguration.generator().generateCode(currentTime);
             } catch (IllegalArgumentException | IllegalStateException e) {
-                state.stop();
-                status.setText(e.getMessage());
-                refresh();
+                session.stop();
+                statusLabel.setText(e.getMessage());
+                refreshDisplay();
                 return;
             }
-            int half = token.length() / 2;
-            code.setText(token.substring(0, half) + " " + token.substring(half));
-            int remaining = configuration.totp().secondsRemaining(now);
-            countdown.setText("Refreshes in " + remaining + "s");
-            progress.setMaximum(configuration.totp().period());
-            progress.setValue(remaining);
+            int codeMidpoint = code.length() / 2;
+            codeLabel.setText(code.substring(0, codeMidpoint) + " " + code.substring(codeMidpoint));
+            int secondsRemaining = activeConfiguration.generator().getSecondsRemaining(currentTime);
+            countdownLabel.setText("Refreshes in " + secondsRemaining + "s");
+            expiryProgressBar.setMaximum(activeConfiguration.generator().getPeriodSeconds());
+            expiryProgressBar.setValue(secondsRemaining);
         } else {
-            code.setText("------");
-            countdown.setText("Start to generate a code");
-            progress.setValue(0);
+            codeLabel.setText("------");
+            countdownLabel.setText("Start to generate a code");
+            expiryProgressBar.setValue(0);
         }
-        activity.setText(state.updatedRequests() + " requests updated");
-        issue.setText(state.lastIssue() == null ? " " : state.lastIssue());
-        issue.setToolTipText(state.lastIssue());
+        requestCountLabel.setText(session.getUpdatedRequestCount() + " requests updated");
+        errorLabel.setText(session.getLastError() == null ? " " : session.getLastError());
+        errorLabel.setToolTipText(session.getLastError());
     }
 
-    private void copyCode() {
-        var configuration = state.configuration();
-        if (configuration == null) { return; }
+    private void copyCurrentCode() {
+        var activeConfiguration = session.getActiveConfiguration();
+        if (activeConfiguration == null) { return; }
         try {
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
-                    new StringSelection(configuration.totp().codeAt(state.now())), null);
-            status.setText("Code copied to the system clipboard. Request updates remain active.");
+                    new StringSelection(activeConfiguration.generator().generateCode(session.getCurrentTime())), null);
+            statusLabel.setText("Code copied to the system clipboard. Request updates remain active.");
         } catch (IllegalStateException | java.awt.HeadlessException | SecurityException e) {
-            status.setText("Clipboard unavailable. You can read the current code above.");
+            statusLabel.setText("Clipboard unavailable. You can read the current code above.");
         }
     }
 
-    private void testRule() {
-        JTextArea sample = new JTextArea("{\"pin\":\"{{TOTP}}\"}", 5, 48);
-        sample.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
-        sample.getAccessibleContext().setAccessibleName("Sample text to test");
-        JPanel content = new JPanel(new BorderLayout(0, 8));
-        content.add(new JLabel("Paste the text to match. Preview uses 123456 and sends no requests."), BorderLayout.NORTH);
-        content.add(new JScrollPane(sample), BorderLayout.CENTER);
-        if (JOptionPane.showConfirmDialog(this, content, "Test replacement rule",
+    private void previewReplacementRule() {
+        JTextArea sampleTextArea = new JTextArea("{\"pin\":\"{{TOTP}}\"}", 5, 48);
+        sampleTextArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        sampleTextArea.getAccessibleContext().setAccessibleName("Sample text to test");
+        JPanel contentPanel = new JPanel(new BorderLayout(0, 8));
+        contentPanel.add(new JLabel("Paste the text to match. Preview uses 123456 and sends no requests."), BorderLayout.NORTH);
+        contentPanel.add(new JScrollPane(sampleTextArea), BorderLayout.CENTER);
+        if (JOptionPane.showConfirmDialog(this, contentPanel, "Test replacement rule",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) { return; }
         try {
-            var replacement = new MatchRule(expression.getText(), regex.isSelected(), bodyOnly.isSelected())
-                    .replace(sample.getText(), "123456");
-            JTextArea output = new JTextArea(replacement.value(), 6, 48);
-            output.setEditable(false);
-            output.setFont(sample.getFont());
-            JOptionPane.showMessageDialog(this, new JScrollPane(output), replacement.matches() + " matches",
+            var replacementResult = new RequestReplacementRule(matchExpressionField.getText(), regexCheckBox.isSelected(), bodyOnlyCheckBox.isSelected())
+                    .replaceMatches(sampleTextArea.getText(), "123456");
+            JTextArea previewTextArea = new JTextArea(replacementResult.text(), 6, 48);
+            previewTextArea.setEditable(false);
+            previewTextArea.setFont(sampleTextArea.getFont());
+            JOptionPane.showMessageDialog(this, new JScrollPane(previewTextArea), replacementResult.replacementCount() + " matches",
                     JOptionPane.PLAIN_MESSAGE);
         } catch (IllegalArgumentException e) {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Invalid rule", JOptionPane.ERROR_MESSAGE);
@@ -393,84 +395,84 @@ public final class AuthenticatorPanel extends JPanel {
 
     public void dispose() {
         disposed = true;
-        timer.stop();
-        state.stop();
-        secret.setText("");
-        refresh();
+        refreshTimer.stop();
+        session.stop();
+        sharedSecretField.setText("");
+        refreshDisplay();
     }
 
-    private static JPanel vertical() {
+    private static JPanel createVerticalPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setAlignmentX(LEFT_ALIGNMENT);
         return panel;
     }
 
-    private static JLabel title(String text, int size) {
+    private static JLabel createHeadingLabel(String text, int size) {
         JLabel label = new JLabel(text);
         label.setFont(label.getFont().deriveFont(Font.BOLD, size));
         label.setAlignmentX(LEFT_ALIGNMENT);
         return label;
     }
 
-    private static void labeled(JPanel panel, String text, javax.swing.JComponent component) {
+    private static void addLabeledControl(JPanel panel, String text, javax.swing.JComponent component) {
         JLabel label = new JLabel(text);
         label.setLabelFor(component);
         panel.add(label);
         panel.add(component);
     }
 
-    private static Color borderColor() {
+    private static Color getBorderColor() {
         Color color = UIManager.getColor("Separator.foreground");
         return color == null ? Color.GRAY : color;
     }
 
     /** Stack the code panel below the inputs when the Burp tab is narrow. */
-    private static final class ResponsiveContent extends JPanel implements Scrollable {
+    private static final class ResponsiveContentPanel extends JPanel implements Scrollable {
         private static final long serialVersionUID = 1L;
-        private final transient Map<Component, GridBagConstraints> original = new LinkedHashMap<>();
-        private boolean compact;
-        private boolean initialized;
+        private final transient Map<Component, GridBagConstraints> wideLayoutConstraints = new LinkedHashMap<>();
+        private boolean compactLayout;
+        private boolean layoutInitialized;
 
-        ResponsiveContent() { super(new GridBagLayout()); }
+        ResponsiveContentPanel() { super(new GridBagLayout()); }
 
         @Override
         public void doLayout() {
-            configureLayout();
+            updateLayoutConstraints();
             super.doLayout();
         }
 
         @Override
         public Dimension getPreferredSize() {
-            configureLayout();
+            updateLayoutConstraints();
             return super.getPreferredSize();
         }
 
-        private void configureLayout() {
-            GridBagLayout grid = (GridBagLayout) getLayout();
-            if (!initialized) {
+        private void updateLayoutConstraints() {
+            GridBagLayout layout = (GridBagLayout) getLayout();
+            if (!layoutInitialized) {
                 for (Component child : getComponents()) {
-                    original.put(child, grid.getConstraints(child));
+                    wideLayoutConstraints.put(child, layout.getConstraints(child));
                 }
             }
-            int available = getParent() == null ? getWidth() : getParent().getWidth();
-            boolean narrow = available < 900;
-            if (!initialized || narrow != compact) {
-                original.forEach((child, wide) -> {
-                    GridBagConstraints constraints = (GridBagConstraints) wide.clone();
-                    if (narrow && wide.gridy == 1) {
-                        constraints.gridx = 0;
-                        constraints.gridwidth = 2;
-                        constraints.weightx = 1;
-                        constraints.insets = new Insets(0, 0, 20, 0);
-                        if (wide.gridx == 1) { constraints.gridy = 2; }
-                    } else if (narrow && wide.gridy >= 2) {
-                        constraints.gridy++;
+            int availableWidth = getParent() == null ? getWidth() : getParent().getWidth();
+            boolean useCompactLayout = availableWidth < 900;
+            if (!layoutInitialized || useCompactLayout != compactLayout) {
+                wideLayoutConstraints.forEach((child, wideConstraints) -> {
+                    GridBagConstraints componentConstraints = (GridBagConstraints) wideConstraints.clone();
+                    if (useCompactLayout && wideConstraints.gridy == 1) {
+                        componentConstraints.gridx = 0;
+                        componentConstraints.gridwidth = 2;
+                        componentConstraints.weightx = 1;
+                        componentConstraints.insets = new Insets(0, 0, 20, 0);
+                        if (wideConstraints.gridx == 1) { componentConstraints.gridy = 2; }
+                    } else if (useCompactLayout && wideConstraints.gridy >= 2) {
+                        componentConstraints.gridy++;
                     }
-                    grid.setConstraints(child, constraints);
+                    layout.setConstraints(child, componentConstraints);
                 });
-                compact = narrow;
-                initialized = true;
+                compactLayout = useCompactLayout;
+                layoutInitialized = true;
             }
         }
 
