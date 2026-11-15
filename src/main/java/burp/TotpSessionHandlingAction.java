@@ -10,7 +10,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class TotpSessionHandlingAction implements SessionHandlingAction {
+final class TotpSessionHandlingAction implements SessionHandlingAction {
     private final AuthenticatorSession session;
 
     @Override

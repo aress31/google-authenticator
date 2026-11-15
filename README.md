@@ -17,7 +17,7 @@ Supports Google Authenticator and other RFC 6238-compatible authenticators.
 
 ## Build and install
 
-With JDK 21 installed, run:
+With JDK 21 or later installed, run:
 
 ```sh
 ./gradlew build
@@ -48,6 +48,7 @@ Copied codes can remain on the clipboard, and modified requests can remain in Bu
 Encoded or transfer-encoded request bodies are left unchanged.
 
 Run automated tests with `./gradlew test`. Request rewriting should also be checked in Burp.
+Format Java sources with `./gradlew format` (`.\gradlew.bat format` on Windows).
 
 ## Issues
 

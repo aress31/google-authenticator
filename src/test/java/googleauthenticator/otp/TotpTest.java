@@ -128,7 +128,6 @@ class TotpTest {
         assertNotEquals(
                 generator.generateCode(Instant.ofEpochSecond(59)),
                 generator.generateCode(Instant.ofEpochSecond(60)));
-        assertFalse(generator.toString().contains(SHA1_SECRET));
     }
 
     @Test

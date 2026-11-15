@@ -10,9 +10,9 @@ import googleauthenticator.session.AuthenticatorSession;
 import javax.swing.SwingUtilities;
 
 public final class AuthenticatorExtension implements BurpExtension {
-    public static final String EXTENSION_NAME = "Google Authenticator";
+    private static final String EXTENSION_NAME = "Google Authenticator";
     // Preserve the original action name so existing session rules can be reselected easily.
-    public static final String SESSION_ACTION_NAME =
+    static final String SESSION_ACTION_NAME =
             EXTENSION_NAME + ": 2FA code applied to selected parameter";
 
     private final AuthenticatorSession session = new AuthenticatorSession();

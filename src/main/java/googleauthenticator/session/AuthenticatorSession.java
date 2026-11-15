@@ -5,6 +5,7 @@ import burp.api.montoya.http.message.requests.MalformedRequestException;
 
 import googleauthenticator.otp.TotpGenerator;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -13,7 +14,7 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Manages authenticator lifecycle and applies one immutable configuration snapshot per request. */
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AuthenticatorSession implements AutoCloseable {
     public record ActiveConfiguration(
             TotpGenerator generator, RequestReplacementRule replacementRule) {}

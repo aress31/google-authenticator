@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'com.gradleup.shadow' version '9.6.1'
+    id 'com.diffplug.spotless' version '8.11.0'
 }
 
 group = 'googleauthenticator'
@@ -21,14 +22,25 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+spotless {
+    enforceCheck = false
+    java {
+        googleJavaFormat('2.0.0').aosp().cleanup(false).formatJavadoc(false).reorderImports(true)
+    }
+}
+
+tasks.register('format') {
+    group = 'formatting'
+    description = 'Formats Java sources with Google Java Format.'
+    dependsOn 'spotlessApply'
 }
 
 tasks.named('shadowJar') {
