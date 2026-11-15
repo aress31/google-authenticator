@@ -19,7 +19,7 @@ class RequestReplacementRuleTest {
     @Test
     void namedCapturePreservesSurroundingJsonAndReplacesAllValues() {
         var replacementRule =
-                new RequestReplacementRule("\"pin\":\"(?<otp>\\d{6,8})\"", true, true);
+                new RequestReplacementRule("(\"pin\":\")(?<otp>\\d{6,8})(\")", true, true);
         var result =
                 replacementRule.replaceMatches(
                         "{\"pin\":\"000000\",\"n\":123456,\"pin\":\"98765432\"}", "081804");

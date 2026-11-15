@@ -8,7 +8,7 @@ import java.util.regex.PatternSyntaxException;
 public final class RequestReplacementRule {
     private final Pattern pattern;
     private final boolean bodyOnly;
-    private final boolean hasOtpCaptureGroup;
+    private final int replacementGroupIndex;
 
     public RequestReplacementRule(
             String matchExpression, boolean regularExpression, boolean bodyOnly) {
@@ -25,7 +25,8 @@ public final class RequestReplacementRule {
             throw new IllegalArgumentException("The expression must match a non-empty value.");
         }
         this.bodyOnly = bodyOnly;
-        hasOtpCaptureGroup = regularExpression && pattern.namedGroups().containsKey("otp");
+        // Group 0 is the whole match when the rule has no named 'otp' group.
+        replacementGroupIndex = pattern.namedGroups().getOrDefault("otp", 0);
     }
 
     public boolean isBodyOnly() {
@@ -38,8 +39,8 @@ public final class RequestReplacementRule {
         int previousEnd = 0;
         int replacementCount = 0;
         while (matcher.find()) {
-            int matchStart = hasOtpCaptureGroup ? matcher.start("otp") : matcher.start();
-            int matchEnd = hasOtpCaptureGroup ? matcher.end("otp") : matcher.end();
+            int matchStart = matcher.start(replacementGroupIndex);
+            int matchEnd = matcher.end(replacementGroupIndex);
             if (matchStart < 0) {
                 continue; // An optional named group did not participate.
             }

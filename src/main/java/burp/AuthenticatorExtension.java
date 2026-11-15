@@ -15,36 +15,26 @@ public final class AuthenticatorExtension implements BurpExtension {
     public static final String SESSION_ACTION_NAME =
             EXTENSION_NAME + ": 2FA code applied to selected parameter";
 
+    private final AuthenticatorSession session = new AuthenticatorSession();
     private AuthenticatorPanel panel;
 
     @Override
     public void initialize(MontoyaApi montoyaApi) {
         montoyaApi.extension().setName(EXTENSION_NAME);
-        AuthenticatorSession session = new AuthenticatorSession();
         var userInterface = montoyaApi.userInterface();
         try {
             // Swing controls need the UI thread; AuthenticatorSession and its clock do not.
             // Burp does not guarantee which thread calls initialize(), and invokeAndWait()
             // must only be called when we are not already on the UI thread.
             if (SwingUtilities.isEventDispatchThread()) {
-                initializeInterface(session, userInterface);
+                initializeInterface(userInterface);
             } else {
-                SwingUtilities.invokeAndWait(() -> initializeInterface(session, userInterface));
+                SwingUtilities.invokeAndWait(() -> initializeInterface(userInterface));
             }
-            montoyaApi
-                    .extension()
-                    .registerUnloadingHandler(() -> {
-                        session.close();
-                        SwingUtilities.invokeLater(() -> panel.dispose());
-                    });
+            montoyaApi.extension().registerUnloadingHandler(this::shutdown);
             montoyaApi.http().registerSessionHandlingAction(new TotpSessionHandlingAction(session));
         } catch (Exception e) {
-            session.close();
-            SwingUtilities.invokeLater(() -> {
-                if (panel != null) {
-                    panel.dispose();
-                }
-            });
+            shutdown();
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
@@ -57,11 +47,20 @@ public final class AuthenticatorExtension implements BurpExtension {
                         EXTENSION_NAME + " 2.0.0 initialized. Secrets are held in memory only.");
     }
 
-    private void initializeInterface(AuthenticatorSession session, UserInterface userInterface) {
+    private void initializeInterface(UserInterface userInterface) {
         // The theme call below styles the panel's existing controls; this callback styles
         // the "Test rule" pop-up windows, which are created later.
         panel = new AuthenticatorPanel(session, userInterface::applyThemeToComponent);
         userInterface.applyThemeToComponent(panel);
         userInterface.registerSuiteTab(EXTENSION_NAME, panel);
+    }
+
+    private void shutdown() {
+        session.close();
+        SwingUtilities.invokeLater(() -> {
+            if (panel != null) {
+                panel.dispose();
+            }
+        });
     }
 }

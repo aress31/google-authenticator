@@ -116,11 +116,7 @@ public final class AuthenticatorPanel extends JPanel {
         bodyOnlyCheckBox.addActionListener(event -> pauseSessionForEdit());
         startButton.addActionListener(event -> startSession());
         sharedSecretField.addActionListener(event -> startSession());
-        stopButton.addActionListener(event -> {
-            session.stop();
-            statusLabel.setText("Paused. Requests are left unchanged.");
-            refreshDisplay();
-        });
+        stopButton.addActionListener(event -> stopSession("Paused. Requests are left unchanged."));
         copyButton.addActionListener(event -> copyCurrentCode());
         refreshTimer = new Timer(250, event -> refreshDisplay());
         refreshTimer.start();
@@ -190,10 +186,8 @@ public final class AuthenticatorPanel extends JPanel {
         buttonPanel.add(stopButton);
         JButton clearSecretButton = new JButton("Clear secret");
         clearSecretButton.addActionListener(event -> {
-            session.stop();
             sharedSecretField.setText("");
-            statusLabel.setText("Secret cleared. Requests are left unchanged.");
-            refreshDisplay();
+            stopSession("Secret cleared. Requests are left unchanged.");
         });
         buttonPanel.add(clearSecretButton);
         panel.add(buttonPanel);
@@ -257,8 +251,12 @@ public final class AuthenticatorPanel extends JPanel {
         if (updatingForm) {
             return;
         }
+        stopSession("Configuration changed. Apply & start to enable request updates.");
+    }
+
+    private void stopSession(String message) {
         session.stop();
-        statusLabel.setText("Configuration changed. Apply & start to enable request updates.");
+        statusLabel.setText(message);
         refreshDisplay();
     }
 
@@ -273,9 +271,7 @@ public final class AuthenticatorPanel extends JPanel {
             try {
                 code = activeConfiguration.generator().generateCode(currentTime);
             } catch (IllegalArgumentException | IllegalStateException e) {
-                session.stop();
-                statusLabel.setText(e.getMessage());
-                refreshDisplay();
+                stopSession(e.getMessage());
                 return;
             }
             int codeMidpoint = code.length() / 2;
