@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest an improvement to the extension.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before suggesting a feature.
+        Describe the testing workflow this would improve, using dummy data rather than real credentials.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to achieve, and what is difficult with the current extension?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Describe the behavior you would like and how it would fit into your Burp workflow.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any existing features or workarounds you have tried.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add examples or mockups if useful. Remove real shared secrets, provisioning URIs, and account details.

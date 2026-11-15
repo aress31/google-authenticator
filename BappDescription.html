@@ -1,12 +1,7 @@
-<p>This Burp Suite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.</p>
-
-<p>Instructions:</p>
-
+<p>Generate time-based one-time passwords and apply them to scoped Burp session handling rules. Supports Google Authenticator and other RFC 6238 TOTP clients, Base32 secrets and otpauth://totp provisioning URIs, SHA-1/SHA-256/SHA-512, 6 or 8 digits, and configurable periods.</p>
 <ol>
-<li>Enter the <i>shared secret</i> into the Google Authenticator tab.</li>
-<li>Enter a string to regular expression to replace in requests. The regular expression <i>(?&lt;![\w\d])\d{6,8}(?![\w\d])</i> matches an existing OTP.</li>
-<li>Configure a session handling rule that applies to relevant requests and invokes the extension.</li>
-<ol>
-
-<p>For more detailed instructions, consult the Github repository.</p>
-
+  <li>Enter a shared secret or TOTP provisioning URI in the Google Authenticator tab.</li>
+  <li>Place <code>{{TOTP}}</code> in the relevant request body, or configure a literal/regex replacement. Use a named <code>otp</code> capture group to replace only a value within a larger regex match.</li>
+  <li>Click <strong>Apply &amp; start</strong>, then add the extension action to a session handling rule under <strong>Settings &gt; Sessions</strong>. Restrict the rule to the intended requests and tools.</li>
+</ol>
+<p>Codes are generated when requests are processed. The interface provides expiry, clipboard copy, rule testing and a request update counter. Secrets remain in memory only. Requires Java 21 and Burp Suite 2026.7 or later.</p>

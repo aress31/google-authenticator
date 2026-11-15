@@ -1,32 +1,39 @@
-apply plugin: 'java'
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.6.1'
+}
+
+group = 'googleauthenticator'
+version = '2.0.0'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/com.warrenstrange/googleauth
-    implementation group: 'com.warrenstrange', name: 'googleauth', version: '1.5.0'
-    // https://mvnrepository.com/artifact/net.portswigger.burp.extender/burp-extender-api
-    implementation group: 'net.portswigger.burp.extender', name: 'burp-extender-api', version: '2.3'
-
-    // https://mvnrepository.com/artifact/junit/junit
-    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
-    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha5'
+    compileOnly 'net.portswigger.burp.extensions:montoya-api:2026.7'
+    testImplementation 'net.portswigger.burp.extensions:montoya-api:2026.7'
+    testImplementation platform('org.junit:junit-bom:5.13.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-test {
-    testLogging.showStandardStreams = true   
-}
-
-task fatJar(type: Jar) {
-    baseName = project.name + '-all'
-    duplicatesStrategy = 'exclude'
-    from { 
-        configurations.runtimeClasspath.collect { 
-            it.isDirectory() ? it : zipTree(it) 
-        }
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
-    with jar
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    systemProperty 'java.awt.headless', 'true'
+}
+
+tasks.named('shadowJar') {
+    archiveFileName = 'google-authenticator-all.jar'
+    mergeServiceFiles()
+    // Let service descriptors reach the transformer while excluding other duplicates.
+    filesMatching('META-INF/services/**') {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
 }

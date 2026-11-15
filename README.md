@@ -1,137 +1,143 @@
-# GoogleAuthenticator
+# Google Authenticator for Burp Suite
 
-[![Language](https://img.shields.io/badge/Lang-Java-blue.svg)](https://www.java.com)
-[![License](https://img.shields.io/badge/License-Apache%202.0-red.svg)](https://opensource.org/licenses/Apache-2.0)
+Apply fresh time-based one-time passwords to requests through Burp session handling rules.
+Works with Google Authenticator and other clients that provision standard **RFC 6238 TOTP** secrets,
+including Microsoft Authenticator's TOTP accounts. Push approvals and proprietary authentication methods are not supported.
 
-## A Burp Suite extension to apply the current Google Two-Tactor Authentication (2FA) code to relevant/selected requests.
+Version 2 modernises the extension with Java 21, Burp's Montoya API, a native theme-aware interface,
+and no bundled runtime dependencies. **Requires Burp Suite 2026.7 or later and Java 21 or later.**
 
-This Burp Suite extension turns Burp into a Google Authenticator client. The current Google 2FA code is automatically applied to bespoke location(s) in relevant requests.
+![Google Authenticator interface](.github/assets/configuration-modern.png)
 
-Further information on two-factor authentication is available at the following links:
+## Features
 
-- <https://en.wikipedia.org/wiki/Google_Authenticator>
-- <https://tools.ietf.org/html/rfc4226>
-- <https://tools.ietf.org/html/rfc6238>
+- Base32 secrets or `otpauth://totp/...` provisioning URIs.
+- HMAC-SHA-1, SHA-256 and SHA-512; 6 or 8 digits; periods from 1 to 300 seconds.
+- Codes generated at request-processing time, independently of the UI timer. Leading zeroes are preserved.
+- Literal placeholders or compiled regular expressions, with optional named capture replacement.
+- Body-only replacement by default, with whole-request matching available for headers and query values.
+- Masked secret entry, expiry countdown, copy code, local rule testing, stop/clear controls and request counts.
+- Secrets held in memory only; no secret persistence, telemetry, or request/secret logging.
 
-Further information about Burp session handling rules is available at the following link:
+## Build and install
 
-- <https://portswigger.net/support/configuring-burp-suites-session-handling-rules>
+Install **JDK 21** and set `JAVA_HOME`. The build uses a Java 21 toolchain for compilation and tests.
+A separate Gradle installation is unnecessary;
+the checked-in wrapper downloads its pinned, checksum-verified distribution. The first build needs internet access.
 
----
-
-## Graphic User Interface (GUI) overview
-
-![example](images/configuration-1.png)
-
-- Top panel: Secret shared key, used to generate the Google 2FA code using the TOTP algorithm specified in RFC4226 and RFC6238.
-- Left panel: Regular expression for the session handling rule to match and replace with the current Google 2FA code.
-- Right panel: Google 2FA generated code in real-time.
-
----
-
-## Example
-
-### Problem
-
-We have been commissioned to perform a web application penetration test on www.foobar.com. This web application implements a login form incorporating Google 2FA for an additional layer of defence (prevents automated attacks such as brute forcing attacks). The client provided us with testing credentials along with a link to set up the Google Authenticator mobile application to allow for authenticated testing.
-
-A login is performed using the following request (in this example, the `pin` JSON parameter is the Google 2FA).
-
-```
-POST /api/login HTTP/1.1
-Host: foobar.com
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:60.0) Gecko/504482 Firefox/60.0
-Accept: application/json, text/plain, */*
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate
-Referer: https://foobar.com/login
-Content-Type: application/json;charset=utf-8
-Content-Length: 74
-Connection: close
-
-{"email":"ares@foobar.com","password":"SuperP@ssw0rd!","pin":"504482"}
+```powershell
+# Windows
+.\gradlew.bat build
 ```
 
-Following the aforementioned link, we obtain the shared secret (`42TCJUDP94W27YR3`) that the `Time-based One-time Password Algorithm (TOTP)` uses to generate the Google 2FA codes.
-
-During testing, we observed that the application is being protected by a `web application firewall (WAF)`, logging our test user out each time a malicious payload is detected or if too many requests are sent in a short period of time. This configuration makes it virtually impossible to take advantage of the Burp Suite automated scan capabilities.
-
-### Solution
-
-1. Input relevant parameter(s) into the Google Authenticator interface:
-
-   - Shared secret: `42TCJUDP94W27YR3`
-   - Regular expression: `(?<![\w\d])\d{6,8}(?![\w\d])`
-
-2. `Project options` -> `Sessions` -> `Session Handling Rules` -> `Add` a `Session Handling Rule` -> `Invoke a Burp extension` -> `Google Authenticator: 2FA code applied to selected parameter`.
-
-   ![example](images/configuration-2.png)
-
-3. Configure the relevant scope for the registered session handling rule.
-
-4. Watch/monitor relevant request(s) getting updated with the valid/refreshed Google 2FA code generated by `Google Authenticator` using either `Project options` -> `Sessions` -> `Session Handling Rules` -> `Open session tracer` or the `Logger` tab.
-
-   ![example](images/session-tracer.png)
-
-## Tips
-
-- Use the regex `(?<![\w\d])\d{6,8}(?![\w\d])` for optimal results as Google 2FA codes are made up of 6 to 8 digits according to the relevant RFCs.
-- Restrict the scope of the session handling rule down to the request(s) containing the Google 2FA code only.
-
----
-
-## Installation
-
-### Compilation
-
-#### Windows & Unix
-
-1. Install and configure [Gradle](https://gradle.org) on your system.
-2. Download/clone this repository.
-
-```shell
-$ git clone https://github.com/aress31/googleauthenticator
-$ cd .\googleauthenticator\
+```sh
+# Linux / macOS
+bash ./gradlew build
 ```
 
-3. Create the standalone jar:
+Load **`build/libs/google-authenticator-all.jar`** under **Extensions > Installed > Add**, using extension type **Java**.
+The GradleUp Shadow plugin packages the extension and any runtime dependencies into this loadable JAR.
+Use `shadowJar` to package without running tests. Gradle also produces a standard plain JAR;
+load the `-all.jar` archive in Burp.
+The Montoya API is provided by Burp and is deliberately excluded from the JAR, along with test libraries.
 
-```shell
-$ gradle fatJar
+## Configure
+
+1. Open the **Google Authenticator** tab. Enter the account's Base32 shared secret or TOTP provisioning URI.
+   Spaces and lowercase letters in Base32 secrets are accepted. URI parameters override the algorithm, digits
+   and period controls; absent URI parameters use SHA-1, 6 digits and 30 seconds.
+2. Place the literal **`{{TOTP}}`** in the login request body:
+
+   ```http
+   POST /api/login HTTP/1.1
+   Host: example.test
+   Content-Type: application/json
+
+   {"email":"tester@example.test","password":"test-password","pin":"{{TOTP}}"}
+   ```
+
+3. Leave **Regular expression** unchecked and **Request body only** checked. Click **Apply & start**.
+4. Open **Settings > Sessions > Session handling rules**. Add a rule action to **Invoke a Burp extension**
+   and select **Google Authenticator: 2FA code applied to selected parameter**.
+5. Scope the rule to the relevant login requests and tools. Check the resulting requests in **Logger**
+   or Burp's session handling tracer. Burp controls when the action runs; the extension does not add a global HTTP listener.
+
+For a header or query placeholder, uncheck **Request body only**. All occurrences of the configured
+placeholder are replaced in the selected area. Literal mode treats punctuation such as `.`, `[` and `$` literally.
+
+### Replace an existing OTP using regex
+
+Select **Regular expression** and use an expression specific to the OTP field, for example:
+
+```regex
+"pin"\s*:\s*"(?<otp>\d{6,8})"
 ```
 
-### Loading the extension into the Burp Suite
+When a named **`otp`** group exists, only that group's value is replaced; its surrounding JSON remains intact.
+Without that group, the entire regex match is replaced. Ordinary numbered groups do not change this behavior.
+Use **Test rule...** to preview matches against pasted text, using the sample code `123456`; no traffic is sent.
+Avoid broad digit expressions that could replace unrelated numbers. Empty expressions, malformed regexes
+and zero-length matches are rejected. Use bounded expressions; Java regex processing has no execution timeout.
 
-In Burp Suite, under the `Extender/Options` tab, click on the `Add` button and load the `googleauthenticator-all` jar file located in the `.\build\libs` folder.
+### Running and stopping
 
-Alternatively, you can now directly install/load this extension from the `BApp Store`.
+Editing configuration immediately pauses updates. Click **Apply & start** to validate and activate the changes.
+Invalid input leaves the extension paused. **Stop** disables updates while keeping the form available;
+**Clear secret** also empties the secret field. Unloading the extension stops its timer and clears its configuration.
+A request already being processed may finish using the snapshot it acquired before a stop or edit.
+Keep the system clock synchronized with the authenticating server.
 
-_Note: The version of this extension distributed on the `BApp Store` might be lagging behind the version available on this repository._
+## Request handling and privacy
 
----
+Binary bytes outside replacement matches are preserved. Body changes recalculate `Content-Length`.
+Encoded or transfer-encoded body changes are skipped with an explanation in the tab; use uncompressed,
+unchunked requests. Header-only replacements can still be applied to such messages. Requests with malformed
+HTTP framing, no matches, or invalid runtime matches remain unchanged.
 
-## Possible Improvements
+Secrets and codes are not written to extension settings or logs. They exist in JVM memory while configured;
+clearing them releases references, but Java does not guarantee immediate erasure of all in-memory copies.
+**Copy code** puts the code on the system clipboard. Modified requests can contain OTPs in Burp's history or project file.
 
-- [ ] Add additional features, maybe support for Microsoft Authenticator.
-- [ ] Beautify the GUI.
-- [ ] Implement a JTable to view modified requests in real-time.
-- [ ] Leverage the `IHttpListener` interface and rework the filers in order to provide users with more ways of processing request(s).
-- [ ] Source code optimisation.
+## Development
 
----
+```sh
+bash ./gradlew build                  # Compile, test and package
+bash ./gradlew test                   # Run tests only
+bash ./gradlew shadowJar              # Package only (no tests)
+```
+
+Tests cover all 18 RFC 6238 reference vectors, leading zeroes and locale behavior, Base32 and URI validation,
+regex/literal matching, named captures, binary preservation and message lengths, encoded-body rejection,
+concurrent requests, clock rollover, and Swing start/edit/stop/clear/unload behavior.
+CI runs the build on Linux and Windows with Java 21. The Linux job uploads one downloadable extension JAR without a ZIP wrapper.
+A live Burp load test is still needed before release.
+Gradle's standard `check` task runs the tests and is included in `build`.
+Configuration and build caches are enabled. Dependency checksums cover build plugins and application/test dependencies;
+when updating a dependency, regenerate verification metadata deliberately and review the checksum changes.
+
+Generated `build/`, `.gradle/`, and IDE compiler output can be removed and will be recreated as needed.
+Downloaded Gradle distributions and dependencies normally live in your user-level Gradle home (`~/.gradle`),
+not in the repository. Keep `gradle/` and the wrapper scripts: they are part of the build source.
+
+### Upgrading from 1.x
+
+Disable or unload the old extension before loading version 2. Re-enter the secret and match expression;
+the old version did not persist them. The action name is retained, but reselect it in existing session rules
+if Burp cannot resolve the replacement registration. For old whole-request regex behavior, enable
+**Regular expression** and uncheck **Request body only**. Version 2 fixes literal mode to use literal matching.
+
+## Reporting issues
+
+Use the [bug report or feature request forms](https://github.com/aress31/google-authenticator/issues/new/choose).
+For bugs, include the extension version, Burp version, environment, and steps to reproduce.
+Remove real shared secrets, provisioning URIs, passwords, and tokens from examples, logs, and screenshots.
+
+## References
+
+- [RFC 6238: TOTP and reference vectors](https://www.rfc-editor.org/rfc/rfc6238)
+- [Burp session handling rule editor](https://portswigger.net/burp/documentation/desktop/settings/sessions/session-handling-rules)
+- [Montoya extension API](https://github.com/PortSwigger/burp-extensions-montoya-api)
 
 ## License
 
-Copyright (C) 2018 - 2021 Alexandre Teyar
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-<http://www.apache.org/licenses/LICENSE-2.0>
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Copyright (C) 2018-2026 Alexandre Teyar. Licensed under [Apache License 2.0](LICENSE).

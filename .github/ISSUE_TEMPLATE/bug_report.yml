@@ -1,0 +1,75 @@
+name: Bug report
+description: Report a problem with code generation, request replacement, or the interface.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before submitting a report.
+        Use dummy data in examples. Remove shared secrets, provisioning URIs, passwords, and tokens from logs and screenshots.
+
+  - type: input
+    id: extension_version
+    attributes:
+      label: Extension version
+      description: Include the version or commit and whether you installed from the BApp Store or built the JAR.
+      placeholder: "2.0.0, built from source"
+    validations:
+      required: true
+
+  - type: input
+    id: burp_version
+    attributes:
+      label: Burp Suite version and edition
+      placeholder: "2026.7, Community or Professional"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include your operating system and the Java runtime used by Burp. For build failures, include the output of the Gradle wrapper's --version command.
+      placeholder: "Windows 11; Burp's bundled Java runtime"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest example that reproduces the problem, using dummy values.
+      placeholder: |
+        1. Configure the authenticator with ...
+        2. Configure a session handling rule for ...
+        3. Send a request containing ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Describe what happened, including any error shown in the extension tab.
+    validations:
+      required: true
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Relevant configuration
+      description: Include the algorithm, digits, period, match expression, body-only setting, and session rule tools/scope. Omit the shared secret and provisioning URI.
+      render: text
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Logs or screenshots
+      description: Add relevant extension/build output or screenshots with credentials and account details removed.

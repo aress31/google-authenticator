@@ -1,10 +1,37 @@
-build/
+# Gradle caches and generated artifacts
+# Keep gradle/, gradlew*, and gradle.properties versioned.
+/.gradle/
+/build/
+
+# IDE metadata and compiler output
+/.idea/
+*.iml
+*.ipr
+*.iws
+/.vscode/
+/.classpath
+/.project
+/.settings/
+/bin/
+/out/
+*.class
+
+# JVM crash reports and heap dumps
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
+
+# Local Burp Suite projects and backups
+*.burp
+*.burp.bak
+
+# Editor temporary files
 *.swp
-.classpath
-.gradle/
-.idea/workspace.xml
-.project
-.settings/
-.vscode/
-bin/
-.idea/
+*.swo
+*~
+
+# Operating system metadata
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
