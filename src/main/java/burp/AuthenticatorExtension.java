@@ -52,7 +52,11 @@ public final class AuthenticatorExtension implements BurpExtension {
     private void initializeInterface(UserInterface userInterface) {
         // The panel applies Burp's theme before its display styling and reuses this callback
         // for the "Test rule" pop-up windows, which are created later.
-        panel = new AuthenticatorPanel(session, userInterface::applyThemeToComponent);
+        panel =
+                new AuthenticatorPanel(
+                        session,
+                        userInterface.swingUtils().suiteFrame(),
+                        userInterface::applyThemeToComponent);
         userInterface.registerSuiteTab(EXTENSION_NAME, panel);
     }
 

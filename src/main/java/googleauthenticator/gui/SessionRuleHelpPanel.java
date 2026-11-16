@@ -19,10 +19,15 @@ final class SessionRuleHelpPanel extends JPanel {
         toggle.setIcon(UIManager.getIcon("Tree.collapsedIcon"));
         JTextArea instructions =
                 new JTextArea(
-                        "1. Open Settings > Sessions > Session handling rules and add or edit a rule.\n\n"
-                                + "2. Add \"Invoke a Burp extension\" and select the Google Authenticator action.\n\n"
-                                + "3. Limit the rule's scope to the relevant requests and tools. Verify updates in Logger.\n\n"
-                                + "If codes are rejected, check that your system clock is synchronized.");
+                        """
+                        1. Open Settings > Sessions > Session handling rules and add or edit a rule.
+
+                        2. Add "Invoke a Burp extension" and select the Google Authenticator action.
+
+                        3. Limit the rule's scope to the relevant requests and tools. Verify updates in Logger.
+
+                        If codes are rejected, check that your system clock is synchronized.\
+                        """);
         instructions.setEditable(false);
         instructions.setOpaque(false);
         instructions.setLineWrap(true);

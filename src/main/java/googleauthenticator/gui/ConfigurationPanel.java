@@ -48,6 +48,7 @@ final class ConfigurationPanel extends JPanel {
     ConfigurationPanel(
             Runnable configurationChanged,
             Runnable applyConfiguration,
+            Component dialogParent,
             Consumer<Component> applyTheme) {
         // One grid keeps labels and fields aligned across both sections.
         super(new MigLayout("fillx, insets 0, gap 12 16", "[label][grow,fill]"));
@@ -55,7 +56,7 @@ final class ConfigurationPanel extends JPanel {
         configureControls();
         addAuthenticatorSettings();
         add(new JSeparator(), "span, growx, wrap 24");
-        addReplacementSettings(applyTheme);
+        addReplacementSettings(dialogParent, applyTheme);
         registerListeners(applyConfiguration);
     }
 
@@ -174,7 +175,7 @@ final class ConfigurationPanel extends JPanel {
         add(optionsPanel, "growx, wrap 24");
     }
 
-    private void addReplacementSettings(Consumer<Component> applyTheme) {
+    private void addReplacementSettings(Component dialogParent, Consumer<Component> applyTheme) {
         add(createHeading("Request replacement"), "span, wrap 16");
         add(createLabel("Text to replace:", matchExpressionField));
         add(matchExpressionField, "growx, wmin 0, hmin 32, wrap 6");
@@ -185,8 +186,8 @@ final class ConfigurationPanel extends JPanel {
         previewRuleButton.putClientProperty(
                 "FlatLaf.style",
                 "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
-        previewRuleButton.addActionListener(
-                event -> RulePreviewDialog.show(this, this::readReplacementRule, applyTheme));
+        previewRuleButton.addActionListener(event ->
+                RulePreviewDialog.show(dialogParent, this::readReplacementRule, applyTheme));
         add(previewRuleButton, "growx 0, gapleft push, wmin 130, hmin 34");
     }
 

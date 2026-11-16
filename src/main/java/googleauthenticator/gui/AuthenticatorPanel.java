@@ -28,19 +28,21 @@ public final class AuthenticatorPanel extends JPanel {
 
     private final ConfigurationPanel configurationPanel;
     private final CurrentCodePanel currentCodePanel = new CurrentCodePanel(this::copyCurrentCode);
-    private final JLabel statusLabel = new JLabel();
+    private final JLabel validationLabel = new JLabel();
     private final JLabel errorLabel = new JLabel(" ");
     private final JButton startButton = new JButton("Apply & start");
     private final JButton stopButton = new JButton("Stop");
 
     private boolean disposed;
 
-    public AuthenticatorPanel(AuthenticatorSession session, Consumer<Component> applyTheme) {
+    public AuthenticatorPanel(
+            AuthenticatorSession session, Component dialogParent, Consumer<Component> applyTheme) {
         super(new BorderLayout());
         this.session = session;
         configurationPanel =
-                new ConfigurationPanel(this::pauseSessionForEdit, this::startSession, applyTheme);
-        statusLabel.setVisible(false);
+                new ConfigurationPanel(
+                        this::pauseSessionForEdit, this::startSession, dialogParent, applyTheme);
+        validationLabel.setVisible(false);
         errorLabel.setVisible(false);
         add(createContentScrollPane(), BorderLayout.CENTER);
         // The panel and later pop-up windows share Burp's theme callback.
@@ -49,7 +51,7 @@ public final class AuthenticatorPanel extends JPanel {
         // Burp supplies orange, hover, focus and disabled states for the primary action.
         startButton.putClientProperty("FlatLaf.styleClass", "primary");
         startButton.addActionListener(event -> startSession());
-        stopButton.addActionListener(event -> stopSession("Paused. Requests are left unchanged."));
+        stopButton.addActionListener(event -> stopSession("Requests are left unchanged."));
         refreshTimer = new Timer(250, event -> refreshDisplay());
         refreshDisplay();
         refreshTimer.start();
@@ -107,7 +109,7 @@ public final class AuthenticatorPanel extends JPanel {
             stopSession("Secret cleared. Requests are left unchanged.");
         });
         panel.add(clearSecretButton, "growx 0, wmin 140, hmin 34, gapleft 12, gapright push");
-        panel.add(statusLabel, "wmin 0");
+        panel.add(validationLabel, "wmin 0");
         panel.add(errorLabel, "wmin 0");
 
         return panel;
@@ -123,12 +125,11 @@ public final class AuthenticatorPanel extends JPanel {
             var replacementRule = configurationPanel.readReplacementRule();
             configurationPanel.showGeneratorOptions(generator);
             session.start(generator, replacementRule);
-            showStatus(
-                    "Active. Only requests covered by your Burp session handling rule will be updated.");
+            showStatus("Only requests covered by your Burp session rule are updated.");
         } catch (IllegalArgumentException | IllegalStateException e) {
-            showStatus(e.getMessage());
+            showValidationError(e.getMessage());
         } catch (java.text.ParseException e) {
-            showStatus("Enter a whole-number period between 1 and 300 seconds.");
+            showValidationError("Enter a whole-number period between 1 and 300 seconds.");
         } finally {
             refreshDisplay();
         }
@@ -138,7 +139,7 @@ public final class AuthenticatorPanel extends JPanel {
         if (disposed) {
             return;
         }
-        stopSession("Configuration changed. Apply & start to enable request updates.");
+        stopSession("Settings changed. Click Apply & start to resume.");
     }
 
     private void stopSession(String message) {
@@ -174,9 +175,15 @@ public final class AuthenticatorPanel extends JPanel {
     }
 
     private void showStatus(String message) {
-        statusLabel.setText(message);
-        statusLabel.setToolTipText(message);
-        statusLabel.setVisible(message != null && !message.isBlank());
+        validationLabel.setVisible(false);
+        currentCodePanel.showStatus(message);
+    }
+
+    private void showValidationError(String message) {
+        currentCodePanel.showStatus("Check the configuration before starting.");
+        validationLabel.setText(message);
+        validationLabel.setToolTipText(message);
+        validationLabel.setVisible(true);
     }
 
     private void copyCurrentCode() {
@@ -193,9 +200,9 @@ public final class AuthenticatorPanel extends JPanel {
                                             .generator()
                                             .generateCode(session.getCurrentTime())),
                             null);
-            showStatus("Code copied to the system clipboard. Request updates remain active.");
+            currentCodePanel.showCopyFeedback("Code copied.");
         } catch (IllegalStateException | java.awt.HeadlessException | SecurityException e) {
-            showStatus("Clipboard unavailable. You can read the current code above.");
+            currentCodePanel.showCopyFeedback("Clipboard unavailable.");
         }
     }
 }
