@@ -39,6 +39,7 @@ public final class TotpInputParser {
                     throw invalidProvisioningUri();
                 }
             }
+
             // URI defaults are part of the provisioning format, not the current form state.
             return new TotpGenerator(
                     parameters.get("secret"),

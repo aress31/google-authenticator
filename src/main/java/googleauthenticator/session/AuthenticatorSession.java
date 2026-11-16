@@ -5,30 +5,21 @@ import burp.api.montoya.http.message.requests.MalformedRequestException;
 
 import googleauthenticator.otp.TotpGenerator;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
-import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Manages authenticator lifecycle and applies one immutable configuration snapshot per request. */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AuthenticatorSession implements AutoCloseable {
     public record ActiveConfiguration(
             TotpGenerator generator, RequestReplacementRule replacementRule) {}
 
-    private final Clock clock;
     private final AtomicLong updatedRequestCount = new AtomicLong();
 
     @Getter private volatile ActiveConfiguration activeConfiguration;
     @Getter private volatile String lastError;
     private boolean closed;
-
-    public AuthenticatorSession() {
-        this(Clock.systemUTC());
-    }
 
     public synchronized void start(
             TotpGenerator generator, RequestReplacementRule replacementRule) {
@@ -51,7 +42,7 @@ public final class AuthenticatorSession implements AutoCloseable {
     }
 
     public Instant getCurrentTime() {
-        return clock.instant();
+        return Instant.now();
     }
 
     public long getUpdatedRequestCount() {

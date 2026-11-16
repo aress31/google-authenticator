@@ -21,9 +21,11 @@ final class CurrentCodePanel extends JPanel {
     private static final long serialVersionUID = 1L;
 
     private final JLabel codeLabel = new JLabel("--- ---");
-    private final JLabel countdownLabel = new JLabel("Start to generate a code");
+    // A space preserves the countdown row's height while paused.
+    private final JLabel countdownLabel = new JLabel(" ");
     private final JProgressBar expiryProgressBar = new JProgressBar(0, 30);
     private final JButton copyButton = new JButton("Copy code");
+
     private final JLabel stateIndicator = new JLabel("\u25a0");
     private final JLabel stateLabel = new JLabel("Paused");
     private final JLabel requestCountLabel = new JLabel("0 requests updated");
@@ -38,6 +40,9 @@ final class CurrentCodePanel extends JPanel {
         add(countdownLabel, "wrap 8");
         expiryProgressBar.setBorderPainted(false);
         add(expiryProgressBar, "h 8!, growx, wrap 16");
+        copyButton.putClientProperty(
+                "FlatLaf.style",
+                "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
         copyButton.addActionListener(event -> copyCode.run());
         add(copyButton, "growx 0, wmin 150, hmin 34, wrap 24");
         add(new JSeparator(), "growx, wrap 24");
@@ -74,7 +79,7 @@ final class CurrentCodePanel extends JPanel {
 
     void showPaused(long updatedRequestCount) {
         codeLabel.setText("--- ---");
-        countdownLabel.setText("Start to generate a code");
+        countdownLabel.setText(" ");
         expiryProgressBar.setValue(0);
         showState(false, updatedRequestCount);
     }

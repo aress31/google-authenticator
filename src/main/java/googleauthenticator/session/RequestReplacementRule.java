@@ -9,6 +9,8 @@ import java.util.regex.PatternSyntaxException;
 
 /** A compiled request replacement rule. A named group 'otp' limits replacement to that group. */
 public final class RequestReplacementRule {
+    public record ReplacementResult(String text, int replacementCount) {}
+
     private final Pattern pattern;
 
     @Getter(AccessLevel.PACKAGE)
@@ -62,6 +64,4 @@ public final class RequestReplacementRule {
                 rewrittenText.append(input, previousEnd, input.length()).toString(),
                 replacementCount);
     }
-
-    public record ReplacementResult(String text, int replacementCount) {}
 }

@@ -25,6 +25,7 @@ public final class AuthenticatorPanel extends JPanel {
 
     private final transient AuthenticatorSession session;
     private final Timer refreshTimer;
+
     private final ConfigurationPanel configurationPanel;
     private final CurrentCodePanel currentCodePanel = new CurrentCodePanel(this::copyCurrentCode);
     private final JLabel statusLabel = new JLabel();
@@ -82,20 +83,21 @@ public final class AuthenticatorPanel extends JPanel {
                 new JPanel(
                         new MigLayout(
                                 "fillx, insets 24, wrap 1, gapy 0, hidemode 3", "[grow,fill]"));
-        panel.add(configurationPanel, "growx, wrap 24");
-        panel.add(new JSeparator(), "growx, wrap 24");
-        panel.add(createActionPanel(), "growx, wrap 24");
-        panel.add(new SessionRuleHelpPanel(), "growx");
+        panel.add(configurationPanel, "wrap 24");
+        panel.add(new JSeparator(), "wrap 24");
+        panel.add(createActionPanel(), "wrap 24");
+        panel.add(new SessionRuleHelpPanel());
 
         return panel;
     }
 
     private JPanel createActionPanel() {
         JPanel panel =
-                new JPanel(new MigLayout("fillx, insets 0, wrap 1, hidemode 3", "[grow,fill]"));
-        JPanel buttonPanel = new JPanel(new MigLayout("insets 0, gap 12"));
-        buttonPanel.add(startButton, "wmin 150, hmin 34");
-        buttonPanel.add(stopButton, "wmin 95, hmin 34");
+                new JPanel(
+                        new MigLayout(
+                                "fillx, insets 0, wrap 1, gap 12 6, hidemode 3", "[grow,fill]"));
+        panel.add(startButton, "split 3, growx 0, wmin 150, hmin 34");
+        panel.add(stopButton, "growx 0, wmin 95, hmin 34, gapleft 12");
         JButton clearSecretButton = new JButton("Clear secret");
         clearSecretButton.putClientProperty(
                 "FlatLaf.style",
@@ -104,8 +106,7 @@ public final class AuthenticatorPanel extends JPanel {
             configurationPanel.clearSecret();
             stopSession("Secret cleared. Requests are left unchanged.");
         });
-        buttonPanel.add(clearSecretButton, "wmin 140, hmin 34");
-        panel.add(buttonPanel);
+        panel.add(clearSecretButton, "growx 0, wmin 140, hmin 34, gapleft 12, gapright push");
         panel.add(statusLabel, "wmin 0");
         panel.add(errorLabel, "wmin 0");
 
@@ -122,7 +123,8 @@ public final class AuthenticatorPanel extends JPanel {
             var replacementRule = configurationPanel.readReplacementRule();
             configurationPanel.showGeneratorOptions(generator);
             session.start(generator, replacementRule);
-            showStatus("");
+            showStatus(
+                    "Active. Only requests covered by your Burp session handling rule will be updated.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             showStatus(e.getMessage());
         } catch (java.text.ParseException e) {

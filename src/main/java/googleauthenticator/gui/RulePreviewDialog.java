@@ -16,8 +16,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 /** Shows a local, live replacement preview without changing the active session. */
 final class RulePreviewDialog {
@@ -29,28 +27,15 @@ final class RulePreviewDialog {
 
     private RulePreviewDialog(Supplier<RequestReplacementRule> ruleSupplier) {
         this.ruleSupplier = ruleSupplier;
+        closeButton.putClientProperty(
+                "FlatLaf.style",
+                "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
         sampleTextArea.getAccessibleContext().setAccessibleName("Sample text to test");
         previewTextArea.setEditable(false);
         previewTextArea.getAccessibleContext().setAccessibleName("Replacement result");
         sampleTextArea
                 .getDocument()
-                .addDocumentListener(
-                        new DocumentListener() {
-                            @Override
-                            public void insertUpdate(DocumentEvent event) {
-                                updatePreview();
-                            }
-
-                            @Override
-                            public void removeUpdate(DocumentEvent event) {
-                                updatePreview();
-                            }
-
-                            @Override
-                            public void changedUpdate(DocumentEvent event) {
-                                updatePreview();
-                            }
-                        });
+                .addDocumentListener(new DocumentChangeListener(this::updatePreview));
     }
 
     static void show(
@@ -71,8 +56,11 @@ final class RulePreviewDialog {
         JDialog dialog = optionPane.createDialog(parent, "Test replacement rule");
         preview.closeButton.addActionListener(event -> dialog.dispose());
         dialog.getRootPane().setDefaultButton(preview.closeButton);
-        dialog.setVisible(true);
-        dialog.dispose();
+        try {
+            dialog.setVisible(true);
+        } finally {
+            dialog.dispose();
+        }
     }
 
     private JPanel createContentPanel() {
@@ -90,7 +78,7 @@ final class RulePreviewDialog {
         contentPanel.add(new JScrollPane(previewTextArea), "grow");
         JPanel actionPanel = new JPanel(new MigLayout("fillx, insets 0", "[grow,fill][]"));
         actionPanel.add(matchCountLabel);
-        actionPanel.add(closeButton);
+        actionPanel.add(closeButton, "hmin 34");
         contentPanel.add(actionPanel);
 
         return contentPanel;
@@ -102,7 +90,10 @@ final class RulePreviewDialog {
                     ruleSupplier.get().replaceMatches(sampleTextArea.getText(), "123456");
             previewTextArea.setText(replacementResult.text());
             int matchCount = replacementResult.replacementCount();
-            matchCountLabel.setText(matchCount + (matchCount == 1 ? " match" : " matches"));
+            matchCountLabel.setText(
+                    matchCount == 0
+                            ? "No matches. Result unchanged."
+                            : matchCount + (matchCount == 1 ? " match" : " matches"));
         } catch (IllegalArgumentException e) {
             previewTextArea.setText(e.getMessage());
             matchCountLabel.setText("Invalid rule");

@@ -1,6 +1,5 @@
 package googleauthenticator.otp;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 /** Generates RFC 6238 TOTP codes using the JDK's cryptographic providers. */
 public final class TotpGenerator {
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    @RequiredArgsConstructor
     public enum Algorithm {
         SHA1("HmacSHA1"),
         SHA256("HmacSHA256"),
@@ -71,6 +70,12 @@ public final class TotpGenerator {
         return periodSeconds - Math.floorMod(instant.getEpochSecond(), periodSeconds);
     }
 
+    @Override
+    public String toString() {
+        return "TotpGenerator[secret=REDACTED, algorithm=%s, codeLength=%s, periodSeconds=%s]"
+                .formatted(algorithm, codeLength, periodSeconds);
+    }
+
     private static byte[] decodeBase32(String input) {
         if (input == null) {
             throw new IllegalArgumentException(
@@ -114,11 +119,5 @@ public final class TotpGenerator {
         }
 
         return decodedSecret.toByteArray();
-    }
-
-    @Override
-    public String toString() {
-        return "TotpGenerator[secret=REDACTED, algorithm=%s, codeLength=%s, periodSeconds=%s]"
-                .formatted(algorithm, codeLength, periodSeconds);
     }
 }

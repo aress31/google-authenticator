@@ -23,22 +23,25 @@ import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 /** Owns form controls and validation, notifying the parent when the user edits or submits. */
 final class ConfigurationPanel extends JPanel {
     private static final long serialVersionUID = 1L;
+    private static final String LITERAL_HINT =
+            "Enter the placeholder used in your request, such as {{TOTP}}. Every match is replaced.";
 
     private final transient Runnable configurationChanged;
+
     private final JPasswordField sharedSecretField = new JPasswordField(28);
     private final JComboBox<TotpGenerator.Algorithm> algorithmComboBox =
             new JComboBox<>(TotpGenerator.Algorithm.values());
     private final JComboBox<Integer> codeLengthComboBox = new JComboBox<>(new Integer[] {6, 8});
     private final JSpinner periodSpinner = new JSpinner(new SpinnerNumberModel(30, 1, 300, 1));
+
     private final JTextField matchExpressionField = new JTextField("{{TOTP}}", 28);
     private final JCheckBox regexCheckBox = new JCheckBox("Regular expression");
     private final JCheckBox bodyOnlyCheckBox = new JCheckBox("Request body only", true);
+    private final JTextArea replacementHint = createHint(LITERAL_HINT);
 
     private boolean updatingForm;
 
@@ -101,6 +104,7 @@ final class ConfigurationPanel extends JPanel {
         algorithmComboBox.getAccessibleContext().setAccessibleName("HMAC algorithm");
         codeLengthComboBox.getAccessibleContext().setAccessibleName("Code digits");
         periodSpinner.getAccessibleContext().setAccessibleName("Period in seconds");
+        periodSpinner.setToolTipText("Code lifetime in seconds (1-300).");
         sharedSecretField.putClientProperty("FlatLaf.style", "showRevealButton: true");
         sharedSecretField.putClientProperty(
                 "JTextField.placeholderText", "Base32 shared secret or otpauth://totp URI");
@@ -115,23 +119,7 @@ final class ConfigurationPanel extends JPanel {
     }
 
     private void registerListeners(Runnable applyConfiguration) {
-        DocumentListener editListener =
-                new DocumentListener() {
-                    @Override
-                    public void insertUpdate(DocumentEvent event) {
-                        notifyConfigurationChanged();
-                    }
-
-                    @Override
-                    public void removeUpdate(DocumentEvent event) {
-                        notifyConfigurationChanged();
-                    }
-
-                    @Override
-                    public void changedUpdate(DocumentEvent event) {
-                        notifyConfigurationChanged();
-                    }
-                };
+        var editListener = new DocumentChangeListener(this::notifyConfigurationChanged);
         sharedSecretField.getDocument().addDocumentListener(editListener);
         matchExpressionField.getDocument().addDocumentListener(editListener);
         ((JSpinner.DefaultEditor) periodSpinner.getEditor())
@@ -141,7 +129,13 @@ final class ConfigurationPanel extends JPanel {
         algorithmComboBox.addActionListener(event -> notifyConfigurationChanged());
         codeLengthComboBox.addActionListener(event -> notifyConfigurationChanged());
         periodSpinner.addChangeListener(event -> notifyConfigurationChanged());
-        regexCheckBox.addActionListener(event -> notifyConfigurationChanged());
+        regexCheckBox.addActionListener(event -> {
+            replacementHint.setText(
+                    regexCheckBox.isSelected()
+                            ? "Every regex match is replaced. Use a named group (?<otp>...) to replace only that group."
+                            : LITERAL_HINT);
+            notifyConfigurationChanged();
+        });
         bodyOnlyCheckBox.addActionListener(event -> notifyConfigurationChanged());
         sharedSecretField.addActionListener(event -> applyConfiguration.run());
     }
@@ -153,47 +147,47 @@ final class ConfigurationPanel extends JPanel {
     }
 
     private void addAuthenticatorSettings() {
-        add(createHeading("Authenticator"), "span, wrap 16");
+        add(createHeading("Authenticator"), "span, wrap 6");
+        add(
+                createHint(
+                        "Supports Google Authenticator and other RFC 6238-compatible TOTP apps."),
+                "span, growx, wmin 0, wrap 16");
         add(createLabel("Shared secret:", sharedSecretField));
         add(sharedSecretField, "growx, wmin 0, hmin 32, wrap 6");
         add(
                 createHint(
-                        "Enter a Base32 secret or an otpauth://totp URI. A URI supplies the algorithm, digits and period."),
+                        "Provisioning URI settings override the options below when you click Apply & start."),
                 "skip 1, growx, wmin 0, wrap 16");
         add(createLabel("Algorithm:", algorithmComboBox));
         JPanel optionsPanel =
                 new JPanel(
                         new MigLayout(
                                 "insets 0, gapx 12",
-                                "[130:pref,fill]24[][80:pref,fill]24[][90:pref,fill][]"));
-        optionsPanel.add(algorithmComboBox, "hmin 32");
+                                "[130:pref,fill]24[][80:pref,fill]24[][90:pref,fill][]",
+                                "[32:pref,fill]"));
+        optionsPanel.add(algorithmComboBox);
         optionsPanel.add(createLabel("Digits:", codeLengthComboBox));
-        optionsPanel.add(codeLengthComboBox, "hmin 32");
+        optionsPanel.add(codeLengthComboBox);
         optionsPanel.add(createLabel("Period:", periodSpinner));
-        optionsPanel.add(periodSpinner, "hmin 32");
+        optionsPanel.add(periodSpinner);
         optionsPanel.add(new JLabel("s"));
         add(optionsPanel, "growx, wrap 24");
     }
 
     private void addReplacementSettings(Consumer<Component> applyTheme) {
         add(createHeading("Request replacement"), "span, wrap 16");
-        add(createLabel("Placeholder:", matchExpressionField));
+        add(createLabel("Text to replace:", matchExpressionField));
         add(matchExpressionField, "growx, wmin 0, hmin 32, wrap 6");
-        add(
-                createHint(
-                        "Put {{TOTP}} in your request, or enable Regular expression to match an existing value. All matches are replaced."),
-                "skip 1, growx, wmin 0, wrap 16");
-        JPanel optionsPanel = new JPanel(new MigLayout("fillx, insets 0", "[]16[][grow][]"));
-        optionsPanel.add(regexCheckBox);
-        optionsPanel.add(bodyOnlyCheckBox);
+        add(replacementHint, "skip 1, growx, wmin 0, wrap 16");
+        add(regexCheckBox, "span, split 3, growx 0");
+        add(bodyOnlyCheckBox, "growx 0, gapleft 16");
         JButton previewRuleButton = new JButton("Test rule");
         previewRuleButton.putClientProperty(
                 "FlatLaf.style",
                 "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
         previewRuleButton.addActionListener(
                 event -> RulePreviewDialog.show(this, this::readReplacementRule, applyTheme));
-        optionsPanel.add(previewRuleButton, "skip 1, wmin 130, hmin 34");
-        add(optionsPanel, "span, growx, wrap");
+        add(previewRuleButton, "growx 0, gapleft push, wmin 130, hmin 34");
     }
 
     private static JLabel createHeading(String title) {
@@ -217,8 +211,10 @@ final class ConfigurationPanel extends JPanel {
         hint.setLineWrap(true);
         hint.setWrapStyleWord(true);
         hint.setOpaque(false);
+        // Read-only guidance should align with its grid cell, without text-field padding.
         hint.putClientProperty(
-                "FlatLaf.style", "font: $Label.font; foreground: $Label.disabledForeground");
+                "FlatLaf.style",
+                "font: $Label.font; foreground: $Label.disabledForeground; border: 0,0,0,0; margin: 0,0,0,0");
 
         return hint;
     }
