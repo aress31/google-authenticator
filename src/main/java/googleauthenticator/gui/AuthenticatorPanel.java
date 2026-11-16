@@ -41,7 +41,9 @@ public final class AuthenticatorPanel extends JPanel {
         this.session = session;
         configurationPanel =
                 new ConfigurationPanel(
-                        this::pauseSessionForEdit, this::startSession, dialogParent, applyTheme);
+                        this::pauseSessionForEdit,
+                        this::startSession,
+                        () -> showRulePreview(dialogParent, applyTheme));
         validationLabel.setVisible(false);
         errorLabel.setVisible(false);
         add(createContentScrollPane(), BorderLayout.CENTER);
@@ -100,10 +102,7 @@ public final class AuthenticatorPanel extends JPanel {
                                 "fillx, insets 0, wrap 1, gap 12 6, hidemode 3", "[grow,fill]"));
         panel.add(startButton, "split 3, growx 0, wmin 150, hmin 34");
         panel.add(stopButton, "growx 0, wmin 95, hmin 34, gapleft 12");
-        JButton clearSecretButton = new JButton("Clear secret");
-        clearSecretButton.putClientProperty(
-                "FlatLaf.style",
-                "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
+        JButton clearSecretButton = UiComponents.secondaryButton("Clear secret");
         clearSecretButton.addActionListener(event -> {
             configurationPanel.clearSecret();
             stopSession("Secret cleared. Requests are left unchanged.");
@@ -113,6 +112,10 @@ public final class AuthenticatorPanel extends JPanel {
         panel.add(errorLabel, "wmin 0");
 
         return panel;
+    }
+
+    private void showRulePreview(Component dialogParent, Consumer<Component> applyTheme) {
+        RulePreviewDialog.show(dialogParent, configurationPanel::readReplacementRule, applyTheme);
     }
 
     private void startSession() {

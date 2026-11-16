@@ -10,9 +10,9 @@ Supports Google Authenticator and other RFC 6238-compatible authenticators.
 ## Features
 
 - Base32 shared secrets and `otpauth://totp` provisioning URIs.
-- SHA-1, SHA-256 and SHA-512, with 6 or 8 digits and configurable periods.
+- SHA-1, SHA-256 and SHA-512, with 6 or 8 digits and periods of 1-300 seconds.
 - Literal or regular-expression replacement in request bodies, headers and URLs.
-- Masked secret entry, code countdown, clipboard copy and local rule testing.
+- Masked secret entry, code countdown, clipboard copy, live rule preview and request counts.
 - Secrets held in memory only.
 
 ## Build and install
@@ -26,6 +26,7 @@ With JDK 21 or later installed, run:
 On Windows, use `.\gradlew.bat build`.
 
 Load `build/libs/google-authenticator-all.jar` in Burp under **Extensions > Installed > Add**, selecting **Java**.
+Burp Suite Professional and Community Edition are supported.
 
 ## Usage
 
@@ -36,7 +37,10 @@ Load `build/libs/google-authenticator-all.jar` in Burp under **Extensions > Inst
    and select Google Authenticator. Scope the rule to the intended requests and tools.
 
 For headers or URL values, uncheck **Request body only**. In regular-expression mode, a named `otp` capture
-group limits replacement to that value. Use **Test rule...** to check a match before enabling it.
+group limits replacement to that value. **Test rule** previews replacements locally without sending requests.
+
+Provisioning URIs supply their own algorithm, digits and period, using standard defaults for omitted options.
+Only time-based codes (TOTP) are supported; counter-based codes (HOTP) are not supported.
 
 Editing the configuration pauses updates. **Stop** pauses request changes; **Clear secret** also empties the secret field.
 Keep your system clock synchronized.
@@ -45,7 +49,7 @@ Keep your system clock synchronized.
 
 The extension does not save shared secrets or write secrets and codes to its logs.
 Copied codes can remain on the clipboard, and modified requests can remain in Burp's history or project files.
-Encoded or transfer-encoded request bodies are left unchanged.
+Body replacements are rejected for encoded or transfer-encoded requests.
 
 Run automated tests with `./gradlew test`. Request rewriting should also be checked in Burp.
 Format Java sources with `./gradlew format` (`.\gradlew.bat format` on Windows).

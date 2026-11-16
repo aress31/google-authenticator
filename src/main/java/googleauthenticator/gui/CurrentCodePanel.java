@@ -24,27 +24,22 @@ final class CurrentCodePanel extends JPanel {
     // A space preserves the countdown row's height while paused.
     private final JLabel countdownLabel = new JLabel(" ");
     private final JProgressBar expiryProgressBar = new JProgressBar(0, 30);
-    private final JButton copyButton = new JButton("Copy code");
+    private final JButton copyButton = UiComponents.secondaryButton("Copy code");
     private final JLabel copyFeedbackLabel = new JLabel(" ");
 
     private final JLabel stateIndicator = new JLabel("\u25a0");
     private final JLabel stateLabel = new JLabel("Paused");
-    private final JTextArea statusTextArea = new JTextArea();
+    private final JTextArea statusTextArea = UiComponents.text("");
     private final JLabel requestCountLabel = new JLabel("0 requests updated");
 
     CurrentCodePanel(Runnable copyCode) {
         super(new MigLayout("fillx, insets 24, wrap 1, gapy 0", "[grow,fill]"));
-        JLabel heading = new JLabel("Current code");
-        heading.putClientProperty("FlatLaf.style", "font: bold +6");
-        add(heading, "wrap 16");
+        add(UiComponents.heading("Current code"), "wrap 16");
         codeLabel.getAccessibleContext().setAccessibleName("Current one-time code");
         add(codeLabel, "w pref!, wrap 12");
         add(countdownLabel, "wrap 8");
         expiryProgressBar.setBorderPainted(false);
         add(expiryProgressBar, "h 8!, growx, wrap 16");
-        copyButton.putClientProperty(
-                "FlatLaf.style",
-                "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
         copyButton.addActionListener(event -> copyCode.run());
         add(copyButton, "growx 0, wmin 150, hmin 34, wrap 6");
         add(copyFeedbackLabel, "wrap 16");
@@ -53,13 +48,6 @@ final class CurrentCodePanel extends JPanel {
                 new JPanel(new MigLayout("fillx, insets 0, gap 8, hidemode 3", "[][grow,fill]"));
         statePanel.add(stateIndicator);
         statePanel.add(stateLabel, "wrap");
-        statusTextArea.setEditable(false);
-        statusTextArea.setFocusable(false);
-        statusTextArea.setOpaque(false);
-        statusTextArea.setLineWrap(true);
-        statusTextArea.setWrapStyleWord(true);
-        statusTextArea.putClientProperty(
-                "FlatLaf.style", "font: $Label.font; border: 0,0,0,0; margin: 0,0,0,0");
         statusTextArea.setVisible(false);
         statePanel.add(statusTextArea, "span, growx, wmin 0, wrap");
         statePanel.add(requestCountLabel, "span, growx");

@@ -18,7 +18,7 @@ final class SessionRuleHelpPanel extends JPanel {
         toggle.setHorizontalAlignment(SwingConstants.LEFT);
         toggle.setIcon(UIManager.getIcon("Tree.collapsedIcon"));
         JTextArea instructions =
-                new JTextArea(
+                UiComponents.text(
                         """
                         1. Open Settings > Sessions > Session handling rules and add or edit a rule.
 
@@ -28,12 +28,6 @@ final class SessionRuleHelpPanel extends JPanel {
 
                         If codes are rejected, check that your system clock is synchronized.\
                         """);
-        instructions.setEditable(false);
-        instructions.setOpaque(false);
-        instructions.setLineWrap(true);
-        instructions.setWrapStyleWord(true);
-        instructions.putClientProperty(
-                "FlatLaf.style", "font: $Label.font; border: 0,0,0,0; margin: 0,0,0,0");
         instructions.setVisible(false);
         toggle.addActionListener(event -> {
             boolean expanded = !instructions.isVisible();

@@ -6,15 +6,12 @@ import googleauthenticator.session.RequestReplacementRule;
 
 import net.miginfocom.swing.MigLayout;
 
-import java.awt.Component;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.function.Consumer;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -41,22 +38,19 @@ final class ConfigurationPanel extends JPanel {
     private final JTextField matchExpressionField = new JTextField("{{TOTP}}", 28);
     private final JCheckBox regexCheckBox = new JCheckBox("Regular expression");
     private final JCheckBox bodyOnlyCheckBox = new JCheckBox("Request body only", true);
-    private final JTextArea replacementHint = createHint(LITERAL_HINT);
+    private final JTextArea replacementHint = UiComponents.hint(LITERAL_HINT);
 
     private boolean updatingForm;
 
     ConfigurationPanel(
-            Runnable configurationChanged,
-            Runnable applyConfiguration,
-            Component dialogParent,
-            Consumer<Component> applyTheme) {
+            Runnable configurationChanged, Runnable applyConfiguration, Runnable previewRule) {
         // One grid keeps labels and fields aligned across both sections.
         super(new MigLayout("fillx, insets 0, gap 12 16", "[label][grow,fill]"));
         this.configurationChanged = configurationChanged;
         configureControls();
         addAuthenticatorSettings();
         add(new JSeparator(), "span, growx, wrap 24");
-        addReplacementSettings(dialogParent, applyTheme);
+        addReplacementSettings(previewRule);
         registerListeners(applyConfiguration);
     }
 
@@ -148,18 +142,18 @@ final class ConfigurationPanel extends JPanel {
     }
 
     private void addAuthenticatorSettings() {
-        add(createHeading("Authenticator"), "span, wrap 6");
+        add(UiComponents.heading("Authenticator"), "span, wrap 6");
         add(
-                createHint(
+                UiComponents.hint(
                         "Supports Google Authenticator and other RFC 6238-compatible TOTP apps."),
                 "span, growx, wmin 0, wrap 16");
-        add(createLabel("Shared secret:", sharedSecretField));
+        add(UiComponents.labelFor("Shared secret:", sharedSecretField));
         add(sharedSecretField, "growx, wmin 0, hmin 32, wrap 6");
         add(
-                createHint(
+                UiComponents.hint(
                         "Provisioning URI settings override the options below when you click Apply & start."),
                 "skip 1, growx, wmin 0, wrap 16");
-        add(createLabel("Algorithm:", algorithmComboBox));
+        add(UiComponents.labelFor("Algorithm:", algorithmComboBox));
         JPanel optionsPanel =
                 new JPanel(
                         new MigLayout(
@@ -167,56 +161,23 @@ final class ConfigurationPanel extends JPanel {
                                 "[130:pref,fill]24[][80:pref,fill]24[][90:pref,fill][]",
                                 "[32:pref,fill]"));
         optionsPanel.add(algorithmComboBox);
-        optionsPanel.add(createLabel("Digits:", codeLengthComboBox));
+        optionsPanel.add(UiComponents.labelFor("Digits:", codeLengthComboBox));
         optionsPanel.add(codeLengthComboBox);
-        optionsPanel.add(createLabel("Period:", periodSpinner));
+        optionsPanel.add(UiComponents.labelFor("Period:", periodSpinner));
         optionsPanel.add(periodSpinner);
         optionsPanel.add(new JLabel("s"));
         add(optionsPanel, "growx, wrap 24");
     }
 
-    private void addReplacementSettings(Component dialogParent, Consumer<Component> applyTheme) {
-        add(createHeading("Request replacement"), "span, wrap 16");
-        add(createLabel("Text to replace:", matchExpressionField));
+    private void addReplacementSettings(Runnable previewRule) {
+        add(UiComponents.heading("Request replacement"), "span, wrap 16");
+        add(UiComponents.labelFor("Text to replace:", matchExpressionField));
         add(matchExpressionField, "growx, wmin 0, hmin 32, wrap 6");
         add(replacementHint, "skip 1, growx, wmin 0, wrap 16");
         add(regexCheckBox, "span, split 3, growx 0");
         add(bodyOnlyCheckBox, "growx 0, gapleft 16");
-        JButton previewRuleButton = new JButton("Test rule");
-        previewRuleButton.putClientProperty(
-                "FlatLaf.style",
-                "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
-        previewRuleButton.addActionListener(event ->
-                RulePreviewDialog.show(dialogParent, this::readReplacementRule, applyTheme));
+        JButton previewRuleButton = UiComponents.secondaryButton("Test rule");
+        previewRuleButton.addActionListener(event -> previewRule.run());
         add(previewRuleButton, "growx 0, gapleft push, wmin 130, hmin 34");
-    }
-
-    private static JLabel createHeading(String title) {
-        JLabel heading = new JLabel(title);
-        heading.putClientProperty("FlatLaf.style", "font: bold +6");
-
-        return heading;
-    }
-
-    private static JLabel createLabel(String text, JComponent component) {
-        JLabel label = new JLabel(text);
-        label.setLabelFor(component);
-
-        return label;
-    }
-
-    private static JTextArea createHint(String text) {
-        JTextArea hint = new JTextArea(text);
-        hint.setEditable(false);
-        hint.setFocusable(false);
-        hint.setLineWrap(true);
-        hint.setWrapStyleWord(true);
-        hint.setOpaque(false);
-        // Read-only guidance should align with its grid cell, without text-field padding.
-        hint.putClientProperty(
-                "FlatLaf.style",
-                "font: $Label.font; foreground: $Label.disabledForeground; border: 0,0,0,0; margin: 0,0,0,0");
-
-        return hint;
     }
 }

@@ -5,7 +5,7 @@
 
 <ul>
   <li>Accepts Base32 shared secrets and <code>otpauth://totp</code> provisioning URIs.</li>
-  <li>Supports SHA-1, SHA-256 and SHA-512, with 6 or 8 digits and configurable periods.</li>
+  <li>Supports SHA-1, SHA-256 and SHA-512, with 6 or 8 digits and periods of 1-300 seconds.</li>
   <li>Replaces literal text or regular-expression matches in request bodies, headers and URLs.</li>
   <li>Provides a code countdown, clipboard copy, live rule preview and request update counter.</li>
 </ul>
@@ -16,11 +16,14 @@
   <strong>Apply &amp; start</strong>, then select the extension through an
   <strong>Invoke a Burp extension</strong> action in a session handling rule.
   Scope the rule to the intended requests and tools.
+  Request body matching is enabled by default; uncheck <strong>Request body only</strong> to also
+  match headers and URLs. <strong>Test rule</strong> previews replacements without sending requests.
 </p>
 
 <p>
   Codes are generated when requests are processed. Shared secrets are held in memory and are not saved
-  in extension settings. Editing the configuration pauses request updates until it is applied again.
+  in extension settings. Provisioning URIs supply their own algorithm, digits and period. Editing the
+  configuration pauses request updates until it is applied again. Counter-based codes (HOTP) are not supported.
 </p>
 
 <p><strong>Requirements:</strong> Burp Suite 2026.7 or later and Java 21 or later.</p>

@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -23,13 +22,10 @@ final class RulePreviewDialog {
     private final JTextArea sampleTextArea = new JTextArea("{\"pin\":\"{{TOTP}}\"}", 5, 48);
     private final JTextArea previewTextArea = new JTextArea(5, 48);
     private final JLabel matchCountLabel = new JLabel();
-    private final JButton closeButton = new JButton("Close");
+    private final JButton closeButton = UiComponents.secondaryButton("Close");
 
     private RulePreviewDialog(Supplier<RequestReplacementRule> ruleSupplier) {
         this.ruleSupplier = ruleSupplier;
-        closeButton.putClientProperty(
-                "FlatLaf.style",
-                "background: $Panel.background; foreground: $Label.foreground; borderColor: $Component.borderColor");
         sampleTextArea.getAccessibleContext().setAccessibleName("Sample text to test");
         previewTextArea.setEditable(false);
         previewTextArea.getAccessibleContext().setAccessibleName("Replacement result");
@@ -72,9 +68,9 @@ final class RulePreviewDialog {
                                 "[][][grow,fill][][grow,fill][]"));
         contentPanel.add(
                 new JLabel("Updates as you type using sample code 123456. No requests are sent."));
-        contentPanel.add(createLabel("Sample text", sampleTextArea));
+        contentPanel.add(UiComponents.labelFor("Sample text", sampleTextArea));
         contentPanel.add(new JScrollPane(sampleTextArea), "grow");
-        contentPanel.add(createLabel("Result", previewTextArea));
+        contentPanel.add(UiComponents.labelFor("Result", previewTextArea));
         contentPanel.add(new JScrollPane(previewTextArea), "grow");
         JPanel actionPanel = new JPanel(new MigLayout("fillx, insets 0", "[grow,fill][]"));
         actionPanel.add(matchCountLabel);
@@ -99,12 +95,5 @@ final class RulePreviewDialog {
             matchCountLabel.setText("Invalid rule");
         }
         previewTextArea.setCaretPosition(0);
-    }
-
-    private static JLabel createLabel(String text, JComponent component) {
-        JLabel label = new JLabel(text);
-        label.setLabelFor(component);
-
-        return label;
     }
 }
